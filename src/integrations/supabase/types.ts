@@ -52,6 +52,7 @@ export type Database = {
       }
       configuracoes: {
         Row: {
+          habilitar_receitas: boolean
           percentual_custo_fixo: number
           percentual_lucro: number
           tipo_arredondamento_preco: Database["public"]["Enums"]["tipo_arredondamento"]
@@ -60,6 +61,7 @@ export type Database = {
           valor_hora_trabalho: number
         }
         Insert: {
+          habilitar_receitas?: boolean
           percentual_custo_fixo?: number
           percentual_lucro?: number
           tipo_arredondamento_preco?: Database["public"]["Enums"]["tipo_arredondamento"]
@@ -68,6 +70,7 @@ export type Database = {
           valor_hora_trabalho?: number
         }
         Update: {
+          habilitar_receitas?: boolean
           percentual_custo_fixo?: number
           percentual_lucro?: number
           tipo_arredondamento_preco?: Database["public"]["Enums"]["tipo_arredondamento"]
@@ -233,6 +236,45 @@ export type Database = {
           },
         ]
       }
+      produto_receitas: {
+        Row: {
+          created_at: string
+          id: string
+          produto_id: string
+          quantidade_utilizada: number
+          receita_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          produto_id: string
+          quantidade_utilizada?: number
+          receita_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          produto_id?: string
+          quantidade_utilizada?: number
+          receita_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_receitas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produto_receitas_receita_id_fkey"
+            columns: ["receita_id"]
+            isOneToOne: false
+            referencedRelation: "receitas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtos: {
         Row: {
           categoria_id: string | null
@@ -289,6 +331,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      receita_itens: {
+        Row: {
+          created_at: string
+          id: string
+          materia_prima_id: string
+          quantidade_utilizada: number
+          receita_id: string
+          unidade_utilizada:
+            | Database["public"]["Enums"]["unidade_medida"]
+            | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          materia_prima_id: string
+          quantidade_utilizada?: number
+          receita_id: string
+          unidade_utilizada?:
+            | Database["public"]["Enums"]["unidade_medida"]
+            | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          materia_prima_id?: string
+          quantidade_utilizada?: number
+          receita_id?: string
+          unidade_utilizada?:
+            | Database["public"]["Enums"]["unidade_medida"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receita_itens_materia_prima_id_fkey"
+            columns: ["materia_prima_id"]
+            isOneToOne: false
+            referencedRelation: "materias_primas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receita_itens_receita_id_fkey"
+            columns: ["receita_id"]
+            isOneToOne: false
+            referencedRelation: "receitas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      receitas: {
+        Row: {
+          created_at: string
+          id: string
+          nome_receita: string
+          rendimento: number
+          unidade_rendimento: Database["public"]["Enums"]["unidade_medida"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome_receita: string
+          rendimento?: number
+          unidade_rendimento?: Database["public"]["Enums"]["unidade_medida"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome_receita?: string
+          rendimento?: number
+          unidade_rendimento?: Database["public"]["Enums"]["unidade_medida"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
