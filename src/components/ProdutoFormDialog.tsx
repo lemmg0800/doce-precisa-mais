@@ -132,6 +132,8 @@ export function ProdutoFormDialog({ open, onOpenChange, initial }: Props) {
       return toast.error("Selecione a matéria-prima em todos os itens.");
     if (form.receitas.some((r) => !r.receita_id))
       return toast.error("Selecione a receita em todos os itens.");
+    if (form.receitas.some((r) => !r.quantidade_utilizada || r.quantidade_utilizada <= 0))
+      return toast.error("Informe a quantidade utilizada para todas as receitas.");
 
     const payload = {
       nome_produto: form.nome_produto.trim(),
