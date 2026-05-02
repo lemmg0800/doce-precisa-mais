@@ -31,7 +31,7 @@ function ProdutosPage() {
   const categorias = usePricingStore((s) => s.categorias);
   const kits = usePricingStore((s) => s.kits);
   const receitas = usePricingStore((s) => s.receitas);
-  const config = usePricingStore((s) => s.config);
+  const config = useConfigEfetiva();
   const deleteProduto = usePricingStore((s) => s.deleteProduto);
   const duplicateProduto = usePricingStore((s) => s.duplicateProduto);
 
