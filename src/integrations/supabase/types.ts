@@ -52,7 +52,6 @@ export type Database = {
       }
       configuracoes: {
         Row: {
-          habilitar_receitas: boolean
           percentual_custo_fixo: number
           percentual_lucro: number
           tipo_arredondamento_preco: Database["public"]["Enums"]["tipo_arredondamento"]
@@ -61,7 +60,6 @@ export type Database = {
           valor_hora_trabalho: number
         }
         Insert: {
-          habilitar_receitas?: boolean
           percentual_custo_fixo?: number
           percentual_lucro?: number
           tipo_arredondamento_preco?: Database["public"]["Enums"]["tipo_arredondamento"]
@@ -70,7 +68,6 @@ export type Database = {
           valor_hora_trabalho?: number
         }
         Update: {
-          habilitar_receitas?: boolean
           percentual_custo_fixo?: number
           percentual_lucro?: number
           tipo_arredondamento_preco?: Database["public"]["Enums"]["tipo_arredondamento"]
