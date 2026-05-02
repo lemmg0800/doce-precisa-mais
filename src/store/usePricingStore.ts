@@ -80,6 +80,8 @@ const DEFAULT_CONFIG: Configuracoes = {
   percentual_lucro: 20,
   valor_hora_trabalho: 0,
   tipo_arredondamento_preco: "nenhum",
+  modo_custo_fixo: "manual",
+  producao_mensal_estimada: 0,
 };
 
 async function getUserId(): Promise<string> {
