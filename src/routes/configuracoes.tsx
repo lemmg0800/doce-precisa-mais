@@ -8,12 +8,11 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { CurrencyInput, NumberInput } from "@/components/inputs";
 import { usePricingStore } from "@/store/usePricingStore";
 import type { TipoArredondamento } from "@/store/types";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Upload, KeyRound, BookOpen } from "lucide-react";
+import { Download, Upload, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/configuracoes")({
