@@ -567,6 +567,46 @@ export const usePricingStore = create<State>()((set, get) => ({
     }));
   },
 
+  // ===== gastos mensais =====
+  addGasto: async (g) => {
+    const user_id = await getUserId();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any;
+    const { data, error } = await sb
+      .from("gastos_mensais")
+      .insert({ user_id, nome_gasto: g.nome_gasto, valor_mensal: g.valor_mensal })
+      .select()
+      .single();
+    if (error) throw error;
+    set((s) => ({
+      gastos: [
+        ...s.gastos,
+        { id: String(data.id), nome_gasto: String(data.nome_gasto), valor_mensal: Number(data.valor_mensal) },
+      ].sort((a, b) => a.nome_gasto.localeCompare(b.nome_gasto)),
+    }));
+  },
+  updateGasto: async (id, g) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any;
+    const { error } = await sb
+      .from("gastos_mensais")
+      .update({ nome_gasto: g.nome_gasto, valor_mensal: g.valor_mensal })
+      .eq("id", id);
+    if (error) throw error;
+    set((s) => ({
+      gastos: s.gastos
+        .map((x) => (x.id === id ? { ...g, id } : x))
+        .sort((a, b) => a.nome_gasto.localeCompare(b.nome_gasto)),
+    }));
+  },
+  deleteGasto: async (id) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any;
+    const { error } = await sb.from("gastos_mensais").delete().eq("id", id);
+    if (error) throw error;
+    set((s) => ({ gastos: s.gastos.filter((x) => x.id !== id) }));
+  },
+
   updateConfig: async (c) => {
     const user_id = await getUserId();
     const { error } = await supabase
