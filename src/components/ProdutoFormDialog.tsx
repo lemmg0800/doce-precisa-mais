@@ -433,6 +433,130 @@ export function ProdutoFormDialog({ open, onOpenChange, initial }: Props) {
             </div>
           </div>
 
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-primary" /> Receitas utilizadas
+              </Label>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  setForm((f) => {
+                    const newIdx = f.receitas.length;
+                    setTimeout(() => setAutoOpenRecIdx(newIdx), 0);
+                    return {
+                      ...f,
+                      receitas: [
+                        ...f.receitas,
+                        { receita_id: "", quantidade_utilizada: 1 },
+                      ],
+                    };
+                  })
+                }
+                disabled={receitasAll.length === 0}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar receita
+              </Button>
+            </div>
+
+            {receitasAll.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Cadastre receitas em &quot;Receitas&quot; para reutilizá-las nos produtos.
+              </p>
+            )}
+
+            <div className="space-y-2">
+              {form.receitas.map((rec, idx) => {
+                const r = receitasAll.find((x) => x.id === rec.receita_id);
+                const custoUnit = r ? custoUnitarioReceita(r, materias) : 0;
+                const custoTotalReceita = r
+                  ? custoUnit * (r.rendimento || 0) * (rec.quantidade_utilizada || 0)
+                  : 0;
+                return (
+                  <div
+                    key={idx}
+                    className="grid grid-cols-12 gap-2 items-end p-2 rounded-lg bg-secondary/40"
+                  >
+                    <div className="col-span-12 sm:col-span-6">
+                      <Select
+                        value={rec.receita_id}
+                        open={autoOpenRecIdx === idx ? true : undefined}
+                        onOpenChange={(o) => {
+                          if (!o && autoOpenRecIdx === idx) setAutoOpenRecIdx(null);
+                        }}
+                        onValueChange={(v) => {
+                          setForm((f) => ({
+                            ...f,
+                            receitas: f.receitas.map((it, i) =>
+                              i === idx ? { ...it, receita_id: v } : it,
+                            ),
+                          }));
+                          setAutoOpenRecIdx(null);
+                          setFocusQtdIdx(-(idx + 1));
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecionar receita..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {receitasAll.map((rr) => (
+                            <SelectItem key={rr.id} value={rr.id}>
+                              {rr.nome_receita} — {brl(custoUnitarioReceita(rr, materias) * (rr.rendimento || 0))}/receita
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {r && (
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Custo da receita inteira: {brl(custoUnit * (r.rendimento || 0))}
+                        </p>
+                      )}
+                    </div>
+                    <div className="col-span-5 sm:col-span-3">
+                      <NumberInput
+                        value={rec.quantidade_utilizada}
+                        autoFocus={focusQtdIdx === -(idx + 1)}
+                        min={0}
+                        placeholder="1"
+                        onChange={(v) => {
+                          if (focusQtdIdx === -(idx + 1)) setFocusQtdIdx(null);
+                          setForm((f) => ({
+                            ...f,
+                            receitas: f.receitas.map((it, i) =>
+                              i === idx ? { ...it, quantidade_utilizada: v } : it,
+                            ),
+                          }));
+                        }}
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        receita(s)
+                      </p>
+                    </div>
+                    <div className="col-span-6 sm:col-span-2 text-right text-sm tabular-nums font-medium">
+                      {brl(custoTotalReceita)}
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          setForm((f) => ({
+                            ...f,
+                            receitas: f.receitas.filter((_, i) => i !== idx),
+                          }))
+                        }
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
           <div className="rounded-xl border bg-card p-4 space-y-2">
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
               <Row label="Custo total da receita" value={brl(calc.custo_total_receita)} />
