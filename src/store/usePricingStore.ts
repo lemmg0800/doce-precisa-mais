@@ -4,10 +4,12 @@ import { converterQuantidade } from "@/lib/units";
 import type {
   CategoriaProduto,
   Configuracoes,
+  GastoMensal,
   ItemReceita,
   KitEmbalagem,
   KitItem,
   MateriaPrima,
+  ModoCustoFixo,
   Produto,
   ProdutoReceita,
   Receita,
@@ -24,6 +26,12 @@ interface State {
   receitas: Receita[];
   categorias: CategoriaProduto[];
   config: Configuracoes;
+  gastos: GastoMensal[];
+
+  // gastos
+  addGasto: (g: Omit<GastoMensal, "id">) => Promise<void>;
+  updateGasto: (id: string, g: Omit<GastoMensal, "id">) => Promise<void>;
+  deleteGasto: (id: string) => Promise<void>;
 
   loadAll: () => Promise<void>;
   reset: () => void;
@@ -80,6 +88,8 @@ const DEFAULT_CONFIG: Configuracoes = {
   percentual_lucro: 20,
   valor_hora_trabalho: 0,
   tipo_arredondamento_preco: "nenhum",
+  modo_custo_fixo: "manual",
+  producao_mensal_estimada: 0,
 };
 
 async function getUserId(): Promise<string> {
@@ -97,9 +107,10 @@ export const usePricingStore = create<State>()((set, get) => ({
   receitas: [],
   categorias: [],
   config: DEFAULT_CONFIG,
+  gastos: [],
 
   reset: () =>
-    set({ loaded: false, materias: [], kits: [], produtos: [], receitas: [], categorias: [], config: DEFAULT_CONFIG }),
+    set({ loaded: false, materias: [], kits: [], produtos: [], receitas: [], categorias: [], config: DEFAULT_CONFIG, gastos: [] }),
 
   loadAll: async () => {
     if (get().loading) return;
@@ -109,7 +120,7 @@ export const usePricingStore = create<State>()((set, get) => ({
       // Usamos um cast permissivo só para essas três queries.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sb = supabase as any;
-      const [matRes, kitsRes, kitItensRes, prodRes, prodItensRes, cfgRes, catRes, recRes, recItensRes, prodRecRes] =
+      const [matRes, kitsRes, kitItensRes, prodRes, prodItensRes, cfgRes, catRes, recRes, recItensRes, prodRecRes, gastosRes] =
         await Promise.all([
           supabase.from("materias_primas").select("*").order("nome"),
           supabase.from("kits_embalagem").select("*").order("nome_kit"),
@@ -121,6 +132,7 @@ export const usePricingStore = create<State>()((set, get) => ({
           sb.from("receitas").select("*").order("nome_receita"),
           sb.from("receita_itens").select("*"),
           sb.from("produto_receitas").select("*"),
+          sb.from("gastos_mensais").select("*").order("nome_gasto"),
         ]);
 
       const materias: MateriaPrima[] = (matRes.data ?? []).map((r) => ({
@@ -218,17 +230,25 @@ export const usePricingStore = create<State>()((set, get) => ({
         itens: recItensByRec.get(String(r.id)) ?? [],
       }));
 
-      const cfgRow = cfgRes.data;
+      const cfgRow = cfgRes.data as Record<string, unknown> | null;
       const config: Configuracoes = cfgRow
         ? {
             percentual_custo_fixo: Number(cfgRow.percentual_custo_fixo),
             percentual_lucro: Number(cfgRow.percentual_lucro),
             valor_hora_trabalho: Number(cfgRow.valor_hora_trabalho),
             tipo_arredondamento_preco: cfgRow.tipo_arredondamento_preco as TipoArredondamento,
+            modo_custo_fixo: ((cfgRow.modo_custo_fixo as ModoCustoFixo | undefined) ?? "manual"),
+            producao_mensal_estimada: Number(cfgRow.producao_mensal_estimada ?? 0),
           }
         : DEFAULT_CONFIG;
 
-      set({ materias, kits, produtos, receitas, categorias, config, loaded: true });
+      const gastos: GastoMensal[] = ((gastosRes?.data as Array<Record<string, unknown>> | null) ?? []).map((r) => ({
+        id: String(r.id),
+        nome_gasto: String(r.nome_gasto),
+        valor_mensal: Number(r.valor_mensal),
+      }));
+
+      set({ materias, kits, produtos, receitas, categorias, config, gastos, loaded: true });
     } finally {
       set({ loading: false });
     }
@@ -547,6 +567,46 @@ export const usePricingStore = create<State>()((set, get) => ({
     }));
   },
 
+  // ===== gastos mensais =====
+  addGasto: async (g) => {
+    const user_id = await getUserId();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any;
+    const { data, error } = await sb
+      .from("gastos_mensais")
+      .insert({ user_id, nome_gasto: g.nome_gasto, valor_mensal: g.valor_mensal })
+      .select()
+      .single();
+    if (error) throw error;
+    set((s) => ({
+      gastos: [
+        ...s.gastos,
+        { id: String(data.id), nome_gasto: String(data.nome_gasto), valor_mensal: Number(data.valor_mensal) },
+      ].sort((a, b) => a.nome_gasto.localeCompare(b.nome_gasto)),
+    }));
+  },
+  updateGasto: async (id, g) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any;
+    const { error } = await sb
+      .from("gastos_mensais")
+      .update({ nome_gasto: g.nome_gasto, valor_mensal: g.valor_mensal })
+      .eq("id", id);
+    if (error) throw error;
+    set((s) => ({
+      gastos: s.gastos
+        .map((x) => (x.id === id ? { ...g, id } : x))
+        .sort((a, b) => a.nome_gasto.localeCompare(b.nome_gasto)),
+    }));
+  },
+  deleteGasto: async (id) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any;
+    const { error } = await sb.from("gastos_mensais").delete().eq("id", id);
+    if (error) throw error;
+    set((s) => ({ gastos: s.gastos.filter((x) => x.id !== id) }));
+  },
+
   updateConfig: async (c) => {
     const user_id = await getUserId();
     const { error } = await supabase
@@ -645,6 +705,68 @@ export const usePricingStore = create<State>()((set, get) => ({
 }));
 
 // ============== CALCULATIONS ==============
+
+/** Soma de todos os gastos mensais. */
+export function gastosTotalMensal(gastos: GastoMensal[]): number {
+  return gastos.reduce((s, g) => s + (Number(g.valor_mensal) || 0), 0);
+}
+
+/** Custo fixo por unidade produzida no mês. */
+export function custoFixoPorUnidade(gastos: GastoMensal[], producaoMensal: number): number {
+  if (!producaoMensal || producaoMensal <= 0) return 0;
+  return gastosTotalMensal(gastos) / producaoMensal;
+}
+
+/**
+ * Calcula o percentual de custo fixo efetivo:
+ * - Modo manual → usa o valor configurado
+ * - Modo automático → calcula a partir dos gastos, produção mensal e custo médio dos produtos
+ *   percentual = (custo_fixo_por_unidade / custo_medio_produtos) × 100
+ *   Se faltar dado, mantém o percentual manual configurado.
+ */
+export function percentualCustoFixoEfetivo(
+  config: Configuracoes,
+  gastos: GastoMensal[],
+  custoMedio: number,
+): number {
+  if (config.modo_custo_fixo !== "automatico") return config.percentual_custo_fixo;
+  const cfPorUnidade = custoFixoPorUnidade(gastos, config.producao_mensal_estimada);
+  if (cfPorUnidade <= 0 || custoMedio <= 0) return config.percentual_custo_fixo;
+  return (cfPorUnidade / custoMedio) * 100;
+}
+
+/** Devolve uma cópia da config com o percentual_custo_fixo já resolvido. */
+export function configEfetiva(
+  config: Configuracoes,
+  gastos: GastoMensal[],
+  custoMedio: number,
+): Configuracoes {
+  if (config.modo_custo_fixo !== "automatico") return config;
+  return {
+    ...config,
+    percentual_custo_fixo: percentualCustoFixoEfetivo(config, gastos, custoMedio),
+  };
+}
+/**
+ * Calcula o custo unitário base de cada produto (sem aplicar percentual de custo fixo)
+ * e devolve a média. Usado para resolver o percentual no modo automático.
+ */
+export function custoMedioProdutos(
+  produtos: Produto[],
+  materias: MateriaPrima[],
+  config: Configuracoes,
+  kits: KitEmbalagem[],
+  receitas: Receita[],
+): number {
+  if (produtos.length === 0) return 0;
+  const soma = produtos.reduce((s, p) => {
+    // calc não depende do percentual_custo_fixo para custo_unitario_produto
+    const c = calcularProduto(p, materias, config, kits, receitas);
+    return s + (c.custo_unitario_produto || 0);
+  }, 0);
+  return soma / produtos.length;
+}
+
 
 export type InsightTipo = "abaixo" | "acima" | "ideal" | "sem_preco";
 
@@ -826,4 +948,20 @@ export function calcularProduto(
     diferenca_para_ideal,
     insight,
   };
+}
+
+/**
+ * Hook que devolve a config com o percentual de custo fixo já resolvido
+ * (manual usa o valor configurado, automático calcula a partir dos gastos).
+ */
+export function useConfigEfetiva(): Configuracoes {
+  const config = usePricingStore((s) => s.config);
+  const gastos = usePricingStore((s) => s.gastos);
+  const produtos = usePricingStore((s) => s.produtos);
+  const materias = usePricingStore((s) => s.materias);
+  const kits = usePricingStore((s) => s.kits);
+  const receitas = usePricingStore((s) => s.receitas);
+  if (config.modo_custo_fixo !== "automatico") return config;
+  const custoMedio = custoMedioProdutos(produtos, materias, config, kits, receitas);
+  return configEfetiva(config, gastos, custoMedio);
 }

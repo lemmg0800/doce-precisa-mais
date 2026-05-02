@@ -8,11 +8,19 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { CurrencyInput, NumberInput } from "@/components/inputs";
-import { usePricingStore } from "@/store/usePricingStore";
-import type { TipoArredondamento } from "@/store/types";
+import {
+  usePricingStore,
+  gastosTotalMensal,
+  custoFixoPorUnidade,
+  custoMedioProdutos,
+  percentualCustoFixoEfetivo,
+} from "@/store/usePricingStore";
+import type { TipoArredondamento, GastoMensal } from "@/store/types";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Upload, KeyRound } from "lucide-react";
+import { Download, Upload, KeyRound, Calculator, Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { brl } from "@/lib/format";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/configuracoes")({
@@ -24,10 +32,60 @@ function ConfigPage() {
   const updateConfig = usePricingStore((s) => s.updateConfig);
   const exportAll = usePricingStore((s) => s.exportAll);
   const importAll = usePricingStore((s) => s.importAll);
+  const gastos = usePricingStore((s) => s.gastos);
+  const addGasto = usePricingStore((s) => s.addGasto);
+  const updateGasto = usePricingStore((s) => s.updateGasto);
+  const deleteGasto = usePricingStore((s) => s.deleteGasto);
+  const produtos = usePricingStore((s) => s.produtos);
+  const materias = usePricingStore((s) => s.materias);
+  const kits = usePricingStore((s) => s.kits);
+  const receitas = usePricingStore((s) => s.receitas);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [newPwd, setNewPwd] = useState("");
   const [pwdBusy, setPwdBusy] = useState(false);
+  const [novoNome, setNovoNome] = useState("");
+  const [novoValor, setNovoValor] = useState(0);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editNome, setEditNome] = useState("");
+  const [editValor, setEditValor] = useState(0);
+
+  const totalGastos = gastosTotalMensal(gastos);
+  const cfPorUnidade = custoFixoPorUnidade(gastos, config.producao_mensal_estimada);
+  const custoMedio = custoMedioProdutos(produtos, materias, config, kits, receitas);
+  const percentualEfetivo = percentualCustoFixoEfetivo(config, gastos, custoMedio);
+  const isAuto = config.modo_custo_fixo === "automatico";
+
+  const addGastoHandler = async () => {
+    if (!novoNome.trim()) return toast.error("Informe o nome do gasto.");
+    if (!novoValor || novoValor <= 0) return toast.error("Valor mensal deve ser maior que zero.");
+    try {
+      await addGasto({ nome_gasto: novoNome.trim(), valor_mensal: novoValor });
+      setNovoNome("");
+      setNovoValor(0);
+      toast.success("Gasto adicionado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao adicionar.");
+    }
+  };
+
+  const startEdit = (g: GastoMensal) => {
+    setEditingId(g.id);
+    setEditNome(g.nome_gasto);
+    setEditValor(g.valor_mensal);
+  };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    if (!editNome.trim()) return toast.error("Informe o nome do gasto.");
+    try {
+      await updateGasto(editingId, { nome_gasto: editNome.trim(), valor_mensal: editValor });
+      setEditingId(null);
+      toast.success("Gasto atualizado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao atualizar.");
+    }
+  };
 
   const handleExport = () => {
     const data = exportAll();
@@ -92,10 +150,18 @@ function ConfigPage() {
           </CardHeader>
           <CardContent className="grid sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label>Custo fixo (%)</Label>
-              <NumberInput value={config.percentual_custo_fixo}
-                onChange={(v) => set({ percentual_custo_fixo: v })} suffix="%" />
-              <p className="text-xs text-muted-foreground">Compõe o <strong>preço mínimo</strong>.</p>
+              <Label>Custo fixo (%) {isAuto && <span className="text-xs text-muted-foreground">(automático)</span>}</Label>
+              <NumberInput
+                value={isAuto ? Number(percentualEfetivo.toFixed(2)) : config.percentual_custo_fixo}
+                onChange={(v) => set({ percentual_custo_fixo: v })}
+                suffix="%"
+                disabled={isAuto}
+              />
+              <p className="text-xs text-muted-foreground">
+                {isAuto
+                  ? "Calculado a partir dos seus gastos mensais."
+                  : <>Compõe o <strong>preço mínimo</strong>.</>}
+              </p>
             </div>
             <div className="grid gap-2">
               <Label>Lucro desejado (%)</Label>
@@ -124,6 +190,139 @@ function ConfigPage() {
                 </SelectContent>
               </Select>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2">
+              <Calculator className="h-5 w-5 text-primary" /> Custo fixo
+            </CardTitle>
+            <CardDescription>
+              Escolha entre informar o percentual manualmente ou calcular automaticamente a partir dos gastos mensais.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <label className="flex items-center justify-between gap-3 cursor-pointer">
+              <span className="text-sm">
+                <span className="font-medium">Calcular custo fixo automaticamente</span>
+                <span className="block text-xs text-muted-foreground">
+                  Soma seus gastos mensais e divide pela produção estimada.
+                </span>
+              </span>
+              <Switch
+                checked={isAuto}
+                onCheckedChange={(v) => set({ modo_custo_fixo: v ? "automatico" : "manual" })}
+              />
+            </label>
+
+            {isAuto && (
+              <>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>Produção mensal estimada (un.)</Label>
+                    <NumberInput
+                      value={config.producao_mensal_estimada}
+                      onChange={(v) => set({ producao_mensal_estimada: v })}
+                      min={0}
+                      placeholder="Ex.: 200"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Gastos mensais</Label>
+                  <div className="space-y-2">
+                    {gastos.map((g) => (
+                      <div key={g.id} className="grid grid-cols-12 gap-2 items-center p-2 rounded-lg bg-secondary/40">
+                        {editingId === g.id ? (
+                          <>
+                            <Input
+                              className="col-span-6"
+                              value={editNome}
+                              onChange={(e) => setEditNome(e.target.value)}
+                              placeholder="Nome do gasto"
+                            />
+                            <div className="col-span-4">
+                              <CurrencyInput value={editValor} onChange={setEditValor} />
+                            </div>
+                            <Button size="icon" variant="ghost" className="col-span-1" onClick={saveEdit}>
+                              <Check className="h-4 w-4 text-success" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="col-span-1" onClick={() => setEditingId(null)}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="col-span-6 text-sm truncate">{g.nome_gasto}</span>
+                            <span className="col-span-4 text-sm tabular-nums text-right">{brl(g.valor_mensal)}</span>
+                            <Button size="icon" variant="ghost" className="col-span-1" onClick={() => startEdit(g)}>
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="icon" variant="ghost" className="col-span-1"
+                              onClick={async () => { await deleteGasto(g.id); toast.success("Gasto removido."); }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                    {gastos.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Nenhum gasto cadastrado. Adicione abaixo (ex.: aluguel, energia, internet, gás, pró-labore, transporte, marketing, manutenção).
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-12 gap-2 items-end pt-2">
+                    <div className="col-span-6">
+                      <Input
+                        placeholder="Nome do gasto"
+                        value={novoNome}
+                        onChange={(e) => setNovoNome(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-span-4">
+                      <CurrencyInput value={novoValor} onChange={setNovoValor} />
+                    </div>
+                    <Button className="col-span-2" onClick={addGastoHandler}>
+                      <Plus className="h-4 w-4 mr-1" /> Add
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border bg-card p-4 grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <div className="text-muted-foreground text-xs">Custo fixo total/mês</div>
+                    <div className="font-display text-lg font-semibold tabular-nums">{brl(totalGastos)}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground text-xs">Custo fixo por unidade</div>
+                    <div className="font-display text-lg font-semibold tabular-nums">{brl(cfPorUnidade)}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground text-xs">Percentual aplicado</div>
+                    <div className="font-display text-lg font-semibold tabular-nums text-primary">
+                      {percentualEfetivo.toFixed(2)}%
+                    </div>
+                  </div>
+                </div>
+
+                {(gastos.length === 0 || config.producao_mensal_estimada <= 0) && (
+                  <p className="text-xs text-destructive">
+                    Para calcular automaticamente: cadastre ao menos um gasto e informe a produção mensal estimada.
+                  </p>
+                )}
+                {gastos.length > 0 && config.producao_mensal_estimada > 0 && custoMedio <= 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Cadastre produtos para que o percentual seja calculado. Enquanto isso, o valor manual ({config.percentual_custo_fixo}%) continua sendo usado.
+                  </p>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
 

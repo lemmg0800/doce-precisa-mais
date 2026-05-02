@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { CurrencyInput, NumberInput } from "@/components/inputs";
 import { Plus, Trash2, Settings2, BookOpen } from "lucide-react";
-import { usePricingStore, calcularProduto, custoUnitarioReceita } from "@/store/usePricingStore";
+import { usePricingStore, calcularProduto, custoUnitarioReceita, useConfigEfetiva } from "@/store/usePricingStore";
 import type { Produto, Unidade } from "@/store/types";
 import { brl, pct } from "@/lib/format";
 import { unidadeLabel, unidadesCompativeis, converterQuantidade, unidadePadraoReceita } from "@/lib/units";
@@ -51,7 +51,7 @@ export function ProdutoFormDialog({ open, onOpenChange, initial }: Props) {
   const kits = usePricingStore((s) => s.kits);
   const receitasAll = usePricingStore((s) => s.receitas);
   const categorias = usePricingStore((s) => s.categorias);
-  const config = usePricingStore((s) => s.config);
+  const config = useConfigEfetiva();
   const addProduto = usePricingStore((s) => s.addProduto);
   const updateProduto = usePricingStore((s) => s.updateProduto);
 

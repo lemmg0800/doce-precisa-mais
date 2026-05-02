@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { usePricingStore, calcularProduto, type ProdutoCalculos } from "@/store/usePricingStore";
+import { usePricingStore, calcularProduto, useConfigEfetiva, type ProdutoCalculos } from "@/store/usePricingStore";
 import type { Produto } from "@/store/types";
 import { brl, pct } from "@/lib/format";
 import {
@@ -24,7 +24,7 @@ function Home() {
   const produtos = usePricingStore((s) => s.produtos);
   const kits = usePricingStore((s) => s.kits);
   const receitas = usePricingStore((s) => s.receitas);
-  const config = usePricingStore((s) => s.config);
+  const config = useConfigEfetiva();
 
   const enriched = useMemo<EnrichedProduto[]>(
     () =>
