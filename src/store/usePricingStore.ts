@@ -706,6 +706,49 @@ export const usePricingStore = create<State>()((set, get) => ({
 
 // ============== CALCULATIONS ==============
 
+/** Soma de todos os gastos mensais. */
+export function gastosTotalMensal(gastos: GastoMensal[]): number {
+  return gastos.reduce((s, g) => s + (Number(g.valor_mensal) || 0), 0);
+}
+
+/** Custo fixo por unidade produzida no mês. */
+export function custoFixoPorUnidade(gastos: GastoMensal[], producaoMensal: number): number {
+  if (!producaoMensal || producaoMensal <= 0) return 0;
+  return gastosTotalMensal(gastos) / producaoMensal;
+}
+
+/**
+ * Calcula o percentual de custo fixo efetivo:
+ * - Modo manual → usa o valor configurado
+ * - Modo automático → calcula a partir dos gastos, produção mensal e custo médio dos produtos
+ *   percentual = (custo_fixo_por_unidade / custo_medio_produtos) × 100
+ *   Se faltar dado, mantém o percentual manual configurado.
+ */
+export function percentualCustoFixoEfetivo(
+  config: Configuracoes,
+  gastos: GastoMensal[],
+  custoMedioProdutos: number,
+): number {
+  if (config.modo_custo_fixo !== "automatico") return config.percentual_custo_fixo;
+  const cfPorUnidade = custoFixoPorUnidade(gastos, config.producao_mensal_estimada);
+  if (cfPorUnidade <= 0 || custoMedioProdutos <= 0) return config.percentual_custo_fixo;
+  return (cfPorUnidade / custoMedioProdutos) * 100;
+}
+
+/** Devolve uma cópia da config com o percentual_custo_fixo já resolvido. */
+export function configEfetiva(
+  config: Configuracoes,
+  gastos: GastoMensal[],
+  custoMedioProdutos: number,
+): Configuracoes {
+  if (config.modo_custo_fixo !== "automatico") return config;
+  return {
+    ...config,
+    percentual_custo_fixo: percentualCustoFixoEfetivo(config, gastos, custoMedioProdutos),
+  };
+}
+
+
 export type InsightTipo = "abaixo" | "acima" | "ideal" | "sem_preco";
 
 export interface ProdutoCalculos {
