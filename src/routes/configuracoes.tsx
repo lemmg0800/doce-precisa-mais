@@ -150,10 +150,18 @@ function ConfigPage() {
           </CardHeader>
           <CardContent className="grid sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label>Custo fixo (%)</Label>
-              <NumberInput value={config.percentual_custo_fixo}
-                onChange={(v) => set({ percentual_custo_fixo: v })} suffix="%" />
-              <p className="text-xs text-muted-foreground">Compõe o <strong>preço mínimo</strong>.</p>
+              <Label>Custo fixo (%) {isAuto && <span className="text-xs text-muted-foreground">(automático)</span>}</Label>
+              <NumberInput
+                value={isAuto ? Number(percentualEfetivo.toFixed(2)) : config.percentual_custo_fixo}
+                onChange={(v) => set({ percentual_custo_fixo: v })}
+                suffix="%"
+                disabled={isAuto}
+              />
+              <p className="text-xs text-muted-foreground">
+                {isAuto
+                  ? "Calculado a partir dos seus gastos mensais."
+                  : <>Compõe o <strong>preço mínimo</strong>.</>}
+              </p>
             </div>
             <div className="grid gap-2">
               <Label>Lucro desejado (%)</Label>
