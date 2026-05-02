@@ -9,10 +9,11 @@ interface Props {
   className?: string;
   id?: string;
   min?: number;
+  disabled?: boolean;
 }
 
 /** Currency input in BRL with raw number state. */
-export function CurrencyInput({ value, onChange, placeholder = "0,00", className, id, min }: Props) {
+export function CurrencyInput({ value, onChange, placeholder = "0,00", className, id, min, disabled }: Props) {
   const [text, setText] = useState(() =>
     value ? value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "",
   );
@@ -26,6 +27,7 @@ export function CurrencyInput({ value, onChange, placeholder = "0,00", className
         id={id}
         inputMode="decimal"
         className="pl-9 text-right tabular-nums"
+        disabled={disabled}
         value={text}
         placeholder={placeholder}
         onChange={(e) => {
@@ -59,6 +61,7 @@ export function NumberInput({
   min,
   step = "any",
   autoFocus,
+  disabled,
 }: {
   value: number;
   onChange: (v: number) => void;
@@ -69,6 +72,7 @@ export function NumberInput({
   min?: number;
   step?: string;
   autoFocus?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <div className={cn("relative", className)}>
@@ -78,6 +82,7 @@ export function NumberInput({
         inputMode="decimal"
         step={step}
         min={min}
+        disabled={disabled}
         autoFocus={autoFocus}
         className={cn("text-right tabular-nums", suffix && "pr-10")}
         value={Number.isFinite(value) && value !== 0 ? value : value === 0 ? 0 : ""}
