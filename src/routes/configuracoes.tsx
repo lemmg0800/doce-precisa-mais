@@ -32,10 +32,60 @@ function ConfigPage() {
   const updateConfig = usePricingStore((s) => s.updateConfig);
   const exportAll = usePricingStore((s) => s.exportAll);
   const importAll = usePricingStore((s) => s.importAll);
+  const gastos = usePricingStore((s) => s.gastos);
+  const addGasto = usePricingStore((s) => s.addGasto);
+  const updateGasto = usePricingStore((s) => s.updateGasto);
+  const deleteGasto = usePricingStore((s) => s.deleteGasto);
+  const produtos = usePricingStore((s) => s.produtos);
+  const materias = usePricingStore((s) => s.materias);
+  const kits = usePricingStore((s) => s.kits);
+  const receitas = usePricingStore((s) => s.receitas);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [newPwd, setNewPwd] = useState("");
   const [pwdBusy, setPwdBusy] = useState(false);
+  const [novoNome, setNovoNome] = useState("");
+  const [novoValor, setNovoValor] = useState(0);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editNome, setEditNome] = useState("");
+  const [editValor, setEditValor] = useState(0);
+
+  const totalGastos = gastosTotalMensal(gastos);
+  const cfPorUnidade = custoFixoPorUnidade(gastos, config.producao_mensal_estimada);
+  const custoMedio = custoMedioProdutos(produtos, materias, config, kits, receitas);
+  const percentualEfetivo = percentualCustoFixoEfetivo(config, gastos, custoMedio);
+  const isAuto = config.modo_custo_fixo === "automatico";
+
+  const addGastoHandler = async () => {
+    if (!novoNome.trim()) return toast.error("Informe o nome do gasto.");
+    if (!novoValor || novoValor <= 0) return toast.error("Valor mensal deve ser maior que zero.");
+    try {
+      await addGasto({ nome_gasto: novoNome.trim(), valor_mensal: novoValor });
+      setNovoNome("");
+      setNovoValor(0);
+      toast.success("Gasto adicionado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao adicionar.");
+    }
+  };
+
+  const startEdit = (g: GastoMensal) => {
+    setEditingId(g.id);
+    setEditNome(g.nome_gasto);
+    setEditValor(g.valor_mensal);
+  };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    if (!editNome.trim()) return toast.error("Informe o nome do gasto.");
+    try {
+      await updateGasto(editingId, { nome_gasto: editNome.trim(), valor_mensal: editValor });
+      setEditingId(null);
+      toast.success("Gasto atualizado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao atualizar.");
+    }
+  };
 
   const handleExport = () => {
     const data = exportAll();
