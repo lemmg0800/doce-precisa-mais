@@ -74,10 +74,20 @@ export interface ProdutoReceita {
   quantidade_utilizada: number;
 }
 
+export type ModoCustoFixo = "manual" | "automatico";
+
+export interface GastoMensal {
+  id: string;
+  nome_gasto: string;
+  valor_mensal: number;
+}
+
 export interface Configuracoes {
   percentual_custo_fixo: number;
   percentual_lucro: number;
   valor_hora_trabalho: number;
   tipo_arredondamento_preco: TipoArredondamento;
+  modo_custo_fixo: ModoCustoFixo;
+  producao_mensal_estimada: number;
 }
 
