@@ -177,6 +177,7 @@ function ProdutosPage() {
                           </div>
                           <p className="text-xs text-muted-foreground">
                             Rende {p.rendimento} un · {p.itens.length} ingrediente(s)
+                            {(p.receitas?.length ?? 0) > 0 && ` · ${p.receitas!.length} receita(s)`}
                             {p.percentual_perda > 0 && ` · perda ${pct(p.percentual_perda)}`}
                           </p>
                         </CardHeader>
@@ -186,6 +187,31 @@ function ProdutosPage() {
                             <Stat label="Mínimo" value={brl(calc.preco_minimo)} tone="warning" />
                             <Stat label="Sugerido" value={brl(calc.preco_sugerido)} tone="success" />
                           </div>
+
+                          {(p.receitas?.length ?? 0) > 0 && (
+                            <div className="rounded-lg border bg-secondary/30 px-3 py-2 space-y-1">
+                              <div className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                                <BookOpen className="h-3 w-3" /> Receitas
+                              </div>
+                              {p.receitas!.map((pr) => {
+                                const r = receitas.find((x) => x.id === pr.receita_id);
+                                if (!r) return null;
+                                const custoInteira = custoUnitarioReceita(r, materias) * (r.rendimento || 0);
+                                const custoTotal = custoInteira * (pr.quantidade_utilizada || 0);
+                                return (
+                                  <div key={pr.id} className="flex items-center justify-between text-xs">
+                                    <span className="truncate">
+                                      {r.nome_receita}{" "}
+                                      <span className="text-muted-foreground">
+                                        × {pr.quantidade_utilizada}
+                                      </span>
+                                    </span>
+                                    <span className="tabular-nums font-medium">{brl(custoTotal)}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
 
                           {p.preco_praticado != null && p.preco_praticado > 0 ? (
                             <div className="space-y-1.5">
