@@ -52,28 +52,61 @@ export type Database = {
       }
       configuracoes: {
         Row: {
+          modo_custo_fixo: Database["public"]["Enums"]["modo_custo_fixo"]
           percentual_custo_fixo: number
           percentual_lucro: number
+          producao_mensal_estimada: number
           tipo_arredondamento_preco: Database["public"]["Enums"]["tipo_arredondamento"]
           updated_at: string
           user_id: string
           valor_hora_trabalho: number
         }
         Insert: {
+          modo_custo_fixo?: Database["public"]["Enums"]["modo_custo_fixo"]
           percentual_custo_fixo?: number
           percentual_lucro?: number
+          producao_mensal_estimada?: number
           tipo_arredondamento_preco?: Database["public"]["Enums"]["tipo_arredondamento"]
           updated_at?: string
           user_id: string
           valor_hora_trabalho?: number
         }
         Update: {
+          modo_custo_fixo?: Database["public"]["Enums"]["modo_custo_fixo"]
           percentual_custo_fixo?: number
           percentual_lucro?: number
+          producao_mensal_estimada?: number
           tipo_arredondamento_preco?: Database["public"]["Enums"]["tipo_arredondamento"]
           updated_at?: string
           user_id?: string
           valor_hora_trabalho?: number
+        }
+        Relationships: []
+      }
+      gastos_mensais: {
+        Row: {
+          created_at: string
+          id: string
+          nome_gasto: string
+          updated_at: string
+          user_id: string
+          valor_mensal: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome_gasto: string
+          updated_at?: string
+          user_id: string
+          valor_mensal?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome_gasto?: string
+          updated_at?: string
+          user_id?: string
+          valor_mensal?: number
         }
         Relationships: []
       }
@@ -416,6 +449,7 @@ export type Database = {
     }
     Enums: {
       categoria_materia: "ingrediente" | "embalagem"
+      modo_custo_fixo: "manual" | "automatico"
       tipo_arredondamento: "nenhum" | "0.10" | "0.50" | "1.00"
       unidade_medida: "g" | "kg" | "ml" | "L" | "unidade"
     }
@@ -546,6 +580,7 @@ export const Constants = {
   public: {
     Enums: {
       categoria_materia: ["ingrediente", "embalagem"],
+      modo_custo_fixo: ["manual", "automatico"],
       tipo_arredondamento: ["nenhum", "0.10", "0.50", "1.00"],
       unidade_medida: ["g", "kg", "ml", "L", "unidade"],
     },
