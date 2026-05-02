@@ -107,9 +107,10 @@ export const usePricingStore = create<State>()((set, get) => ({
   receitas: [],
   categorias: [],
   config: DEFAULT_CONFIG,
+  gastos: [],
 
   reset: () =>
-    set({ loaded: false, materias: [], kits: [], produtos: [], receitas: [], categorias: [], config: DEFAULT_CONFIG }),
+    set({ loaded: false, materias: [], kits: [], produtos: [], receitas: [], categorias: [], config: DEFAULT_CONFIG, gastos: [] }),
 
   loadAll: async () => {
     if (get().loading) return;
@@ -119,7 +120,7 @@ export const usePricingStore = create<State>()((set, get) => ({
       // Usamos um cast permissivo só para essas três queries.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sb = supabase as any;
-      const [matRes, kitsRes, kitItensRes, prodRes, prodItensRes, cfgRes, catRes, recRes, recItensRes, prodRecRes] =
+      const [matRes, kitsRes, kitItensRes, prodRes, prodItensRes, cfgRes, catRes, recRes, recItensRes, prodRecRes, gastosRes] =
         await Promise.all([
           supabase.from("materias_primas").select("*").order("nome"),
           supabase.from("kits_embalagem").select("*").order("nome_kit"),
@@ -131,6 +132,7 @@ export const usePricingStore = create<State>()((set, get) => ({
           sb.from("receitas").select("*").order("nome_receita"),
           sb.from("receita_itens").select("*"),
           sb.from("produto_receitas").select("*"),
+          sb.from("gastos_mensais").select("*").order("nome_gasto"),
         ]);
 
       const materias: MateriaPrima[] = (matRes.data ?? []).map((r) => ({
@@ -228,17 +230,25 @@ export const usePricingStore = create<State>()((set, get) => ({
         itens: recItensByRec.get(String(r.id)) ?? [],
       }));
 
-      const cfgRow = cfgRes.data;
+      const cfgRow = cfgRes.data as Record<string, unknown> | null;
       const config: Configuracoes = cfgRow
         ? {
             percentual_custo_fixo: Number(cfgRow.percentual_custo_fixo),
             percentual_lucro: Number(cfgRow.percentual_lucro),
             valor_hora_trabalho: Number(cfgRow.valor_hora_trabalho),
             tipo_arredondamento_preco: cfgRow.tipo_arredondamento_preco as TipoArredondamento,
+            modo_custo_fixo: ((cfgRow.modo_custo_fixo as ModoCustoFixo | undefined) ?? "manual"),
+            producao_mensal_estimada: Number(cfgRow.producao_mensal_estimada ?? 0),
           }
         : DEFAULT_CONFIG;
 
-      set({ materias, kits, produtos, receitas, categorias, config, loaded: true });
+      const gastos: GastoMensal[] = ((gastosRes?.data as Array<Record<string, unknown>> | null) ?? []).map((r) => ({
+        id: String(r.id),
+        nome_gasto: String(r.nome_gasto),
+        valor_mensal: Number(r.valor_mensal),
+      }));
+
+      set({ materias, kits, produtos, receitas, categorias, config, gastos, loaded: true });
     } finally {
       set({ loading: false });
     }
