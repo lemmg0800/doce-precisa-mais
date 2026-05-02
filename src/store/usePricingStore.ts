@@ -949,3 +949,19 @@ export function calcularProduto(
     insight,
   };
 }
+
+/**
+ * Hook que devolve a config com o percentual de custo fixo já resolvido
+ * (manual usa o valor configurado, automático calcula a partir dos gastos).
+ */
+export function useConfigEfetiva(): Configuracoes {
+  const config = usePricingStore((s) => s.config);
+  const gastos = usePricingStore((s) => s.gastos);
+  const produtos = usePricingStore((s) => s.produtos);
+  const materias = usePricingStore((s) => s.materias);
+  const kits = usePricingStore((s) => s.kits);
+  const receitas = usePricingStore((s) => s.receitas);
+  if (config.modo_custo_fixo !== "automatico") return config;
+  const custoMedio = custoMedioProdutos(produtos, materias, config, kits, receitas);
+  return configEfetiva(config, gastos, custoMedio);
+}
