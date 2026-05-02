@@ -11,8 +11,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Copy, Search, ChefHat, Settings2 } from "lucide-react";
-import { usePricingStore, calcularProduto } from "@/store/usePricingStore";
+import { Plus, Pencil, Trash2, Copy, Search, ChefHat, Settings2, BookOpen } from "lucide-react";
+import { usePricingStore, calcularProduto, custoUnitarioReceita } from "@/store/usePricingStore";
 import { brl, pct } from "@/lib/format";
 import { ProdutoFormDialog } from "@/components/ProdutoFormDialog";
 import { CategoriasManagerDialog } from "@/components/CategoriasManagerDialog";
