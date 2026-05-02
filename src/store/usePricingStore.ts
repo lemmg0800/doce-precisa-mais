@@ -727,24 +727,24 @@ export function custoFixoPorUnidade(gastos: GastoMensal[], producaoMensal: numbe
 export function percentualCustoFixoEfetivo(
   config: Configuracoes,
   gastos: GastoMensal[],
-  custoMedioProdutos: number,
+  custoMedio: number,
 ): number {
   if (config.modo_custo_fixo !== "automatico") return config.percentual_custo_fixo;
   const cfPorUnidade = custoFixoPorUnidade(gastos, config.producao_mensal_estimada);
-  if (cfPorUnidade <= 0 || custoMedioProdutos <= 0) return config.percentual_custo_fixo;
-  return (cfPorUnidade / custoMedioProdutos) * 100;
+  if (cfPorUnidade <= 0 || custoMedio <= 0) return config.percentual_custo_fixo;
+  return (cfPorUnidade / custoMedio) * 100;
 }
 
 /** Devolve uma cópia da config com o percentual_custo_fixo já resolvido. */
 export function configEfetiva(
   config: Configuracoes,
   gastos: GastoMensal[],
-  custoMedioProdutos: number,
+  custoMedio: number,
 ): Configuracoes {
   if (config.modo_custo_fixo !== "automatico") return config;
   return {
     ...config,
-    percentual_custo_fixo: percentualCustoFixoEfetivo(config, gastos, custoMedioProdutos),
+    percentual_custo_fixo: percentualCustoFixoEfetivo(config, gastos, custoMedio),
   };
 }
 /**
