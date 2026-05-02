@@ -4,10 +4,12 @@ import { converterQuantidade } from "@/lib/units";
 import type {
   CategoriaProduto,
   Configuracoes,
+  GastoMensal,
   ItemReceita,
   KitEmbalagem,
   KitItem,
   MateriaPrima,
+  ModoCustoFixo,
   Produto,
   ProdutoReceita,
   Receita,
@@ -24,6 +26,12 @@ interface State {
   receitas: Receita[];
   categorias: CategoriaProduto[];
   config: Configuracoes;
+  gastos: GastoMensal[];
+
+  // gastos
+  addGasto: (g: Omit<GastoMensal, "id">) => Promise<void>;
+  updateGasto: (id: string, g: Omit<GastoMensal, "id">) => Promise<void>;
+  deleteGasto: (id: string) => Promise<void>;
 
   loadAll: () => Promise<void>;
   reset: () => void;
