@@ -747,6 +747,25 @@ export function configEfetiva(
     percentual_custo_fixo: percentualCustoFixoEfetivo(config, gastos, custoMedioProdutos),
   };
 }
+/**
+ * Calcula o custo unitário base de cada produto (sem aplicar percentual de custo fixo)
+ * e devolve a média. Usado para resolver o percentual no modo automático.
+ */
+export function custoMedioProdutos(
+  produtos: Produto[],
+  materias: MateriaPrima[],
+  config: Configuracoes,
+  kits: KitEmbalagem[],
+  receitas: Receita[],
+): number {
+  if (produtos.length === 0) return 0;
+  const soma = produtos.reduce((s, p) => {
+    // calc não depende do percentual_custo_fixo para custo_unitario_produto
+    const c = calcularProduto(p, materias, config, kits, receitas);
+    return s + (c.custo_unitario_produto || 0);
+  }, 0);
+  return soma / produtos.length;
+}
 
 
 export type InsightTipo = "abaixo" | "acima" | "ideal" | "sem_preco";
