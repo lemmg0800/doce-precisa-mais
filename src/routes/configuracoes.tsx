@@ -8,12 +8,11 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { CurrencyInput, NumberInput } from "@/components/inputs";
 import { usePricingStore } from "@/store/usePricingStore";
 import type { TipoArredondamento } from "@/store/types";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Upload, KeyRound, BookOpen } from "lucide-react";
+import { Download, Upload, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/configuracoes")({
@@ -125,31 +124,6 @@ function ConfigPage() {
                 </SelectContent>
               </Select>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-display flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" /> Receitas reutilizáveis
-            </CardTitle>
-            <CardDescription>
-              Permite criar preparos (massas, recheios, caldas) e reusar em produtos.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <label className="flex items-center justify-between gap-3 cursor-pointer">
-              <span className="text-sm">
-                <span className="font-medium">Habilitar módulo Receitas</span>
-                <span className="block text-xs text-muted-foreground">
-                  Quando ativo, o menu &quot;Receitas&quot; e o botão &quot;Adicionar receita&quot; nos produtos ficam disponíveis.
-                </span>
-              </span>
-              <Switch
-                checked={config.habilitar_receitas}
-                onCheckedChange={(v) => set({ habilitar_receitas: v })}
-              />
-            </label>
           </CardContent>
         </Card>
 

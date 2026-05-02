@@ -3,23 +3,18 @@ import { cn } from "@/lib/utils";
 import { ChefHat, Package, Settings, LayoutDashboard, Box, LogOut, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { usePricingStore } from "@/store/usePricingStore";
 
-const baseLinks = [
+const links = [
   { to: "/", label: "Início", icon: LayoutDashboard },
   { to: "/produtos", label: "Produtos", icon: ChefHat },
   { to: "/materias-primas", label: "Matérias", icon: Package },
-  { to: "/receitas", label: "Receitas", icon: BookOpen, requiresReceitas: true },
+  { to: "/receitas", label: "Receitas", icon: BookOpen },
   { to: "/kits", label: "Kits", icon: Box },
   { to: "/configuracoes", label: "Ajustes", icon: Settings },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
-  const habilitarReceitas = usePricingStore((s) => s.config.habilitar_receitas);
-  const links = baseLinks.filter(
-    (l) => !("requiresReceitas" in l && l.requiresReceitas) || habilitarReceitas,
-  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
