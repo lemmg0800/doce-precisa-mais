@@ -130,31 +130,6 @@ function ConfigPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-display flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" /> Receitas reutilizáveis
-            </CardTitle>
-            <CardDescription>
-              Permite criar preparos (massas, recheios, caldas) e reusar em produtos.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <label className="flex items-center justify-between gap-3 cursor-pointer">
-              <span className="text-sm">
-                <span className="font-medium">Habilitar módulo Receitas</span>
-                <span className="block text-xs text-muted-foreground">
-                  Quando ativo, o menu &quot;Receitas&quot; e o botão &quot;Adicionar receita&quot; nos produtos ficam disponíveis.
-                </span>
-              </span>
-              <Switch
-                checked={config.habilitar_receitas}
-                onCheckedChange={(v) => set({ habilitar_receitas: v })}
-              />
-            </label>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
             <CardTitle className="font-display">Backup dos dados</CardTitle>
             <CardDescription>
               Seus dados ficam salvos na nuvem. Exporte para guardar uma cópia local.

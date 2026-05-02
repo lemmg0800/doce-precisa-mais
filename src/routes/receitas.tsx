@@ -28,7 +28,6 @@ function ReceitasPage() {
   const receitas = usePricingStore((s) => s.receitas);
   const materias = usePricingStore((s) => s.materias);
   const produtos = usePricingStore((s) => s.produtos);
-  const habilitar = usePricingStore((s) => s.config.habilitar_receitas);
   const deleteReceita = usePricingStore((s) => s.deleteReceita);
   const duplicateReceita = usePricingStore((s) => s.duplicateReceita);
 
@@ -47,26 +46,6 @@ function ReceitasPage() {
 
   const usageCount = (id: string) =>
     produtos.filter((p) => (p.receitas ?? []).some((pr) => pr.receita_id === id)).length;
-
-  if (!habilitar) {
-    return (
-      <AppShell>
-        <Card className="max-w-2xl mx-auto mt-12">
-          <CardContent className="p-10 text-center space-y-3">
-            <BookOpen className="h-10 w-10 mx-auto text-primary" />
-            <h2 className="font-display text-2xl">Receitas estão desabilitadas</h2>
-            <p className="text-muted-foreground">
-              Ative o módulo de receitas em{" "}
-              <Link to="/configuracoes" className="text-primary underline-offset-4 hover:underline">
-                Ajustes
-              </Link>{" "}
-              para criar preparos reutilizáveis.
-            </p>
-          </CardContent>
-        </Card>
-      </AppShell>
-    );
-  }
 
   return (
     <AppShell>
