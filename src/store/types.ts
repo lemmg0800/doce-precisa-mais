@@ -79,6 +79,5 @@ export interface Configuracoes {
   percentual_lucro: number;
   valor_hora_trabalho: number;
   tipo_arredondamento_preco: TipoArredondamento;
-  habilitar_receitas: boolean;
 }
 

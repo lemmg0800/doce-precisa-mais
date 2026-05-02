@@ -80,7 +80,6 @@ const DEFAULT_CONFIG: Configuracoes = {
   percentual_lucro: 20,
   valor_hora_trabalho: 0,
   tipo_arredondamento_preco: "nenhum",
-  habilitar_receitas: false,
 };
 
 async function getUserId(): Promise<string> {
@@ -219,14 +218,13 @@ export const usePricingStore = create<State>()((set, get) => ({
         itens: recItensByRec.get(String(r.id)) ?? [],
       }));
 
-      const cfgRow = cfgRes.data as (typeof cfgRes.data & { habilitar_receitas?: boolean }) | null;
+      const cfgRow = cfgRes.data;
       const config: Configuracoes = cfgRow
         ? {
             percentual_custo_fixo: Number(cfgRow.percentual_custo_fixo),
             percentual_lucro: Number(cfgRow.percentual_lucro),
             valor_hora_trabalho: Number(cfgRow.valor_hora_trabalho),
             tipo_arredondamento_preco: cfgRow.tipo_arredondamento_preco as TipoArredondamento,
-            habilitar_receitas: Boolean(cfgRow.habilitar_receitas ?? false),
           }
         : DEFAULT_CONFIG;
 
