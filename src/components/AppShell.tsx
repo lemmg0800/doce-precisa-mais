@@ -24,6 +24,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Link to="/" className="flex items-center gap-2">
             <img src={logo} alt="Logo" className="h-9 w-9 rounded-full object-cover" />
             <div className="leading-tight">
+              <div className="font-display text-lg font-semibold">Preciflow</div>
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
                 Precificação artesanal
               </div>
