@@ -45,10 +45,9 @@ function ConfigPage() {
   const [editValor, setEditValor] = useState(0);
 
   const totalGastos = gastosTotalMensal(gastos);
-  const cfPorUnidade = custoFixoPorUnidade(gastos, config.producao_mensal_estimada);
-  const custoMedio = custoMedioProdutos(produtos, materias, config, kits, receitas);
-  const percentualEfetivo = percentualCustoFixoEfetivo(config, gastos, custoMedio);
+  const percentualEfetivo = percentualCustoFixoEfetivo(config, gastos);
   const isAuto = config.modo_custo_fixo === "automatico";
+  const faturamentoInvalido = isAuto && config.faturamento_mensal_estimado <= 0;
 
   const addGastoHandler = async () => {
     if (!novoNome.trim()) return toast.error("Informe o nome do gasto.");
