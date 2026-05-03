@@ -52,30 +52,30 @@ export type Database = {
       }
       configuracoes: {
         Row: {
+          faturamento_mensal_estimado: number
           modo_custo_fixo: Database["public"]["Enums"]["modo_custo_fixo"]
           percentual_custo_fixo: number
           percentual_lucro: number
-          producao_mensal_estimada: number
           tipo_arredondamento_preco: Database["public"]["Enums"]["tipo_arredondamento"]
           updated_at: string
           user_id: string
           valor_hora_trabalho: number
         }
         Insert: {
+          faturamento_mensal_estimado?: number
           modo_custo_fixo?: Database["public"]["Enums"]["modo_custo_fixo"]
           percentual_custo_fixo?: number
           percentual_lucro?: number
-          producao_mensal_estimada?: number
           tipo_arredondamento_preco?: Database["public"]["Enums"]["tipo_arredondamento"]
           updated_at?: string
           user_id: string
           valor_hora_trabalho?: number
         }
         Update: {
+          faturamento_mensal_estimado?: number
           modo_custo_fixo?: Database["public"]["Enums"]["modo_custo_fixo"]
           percentual_custo_fixo?: number
           percentual_lucro?: number
-          producao_mensal_estimada?: number
           tipo_arredondamento_preco?: Database["public"]["Enums"]["tipo_arredondamento"]
           updated_at?: string
           user_id?: string

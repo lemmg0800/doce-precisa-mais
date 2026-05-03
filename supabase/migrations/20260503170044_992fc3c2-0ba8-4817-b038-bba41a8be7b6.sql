@@ -1,0 +1,1 @@
+ALTER TABLE public.configuracoes RENAME COLUMN producao_mensal_estimada TO faturamento_mensal_estimado;
