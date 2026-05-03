@@ -10,7 +10,7 @@ import type { Produto } from "@/store/types";
 import { brl, pct } from "@/lib/format";
 import {
   ChefHat, Package, Settings, ArrowRight, TrendingUp, TrendingDown,
-  Award, AlertTriangle, BadgeCheck, Tag,
+  Award, AlertTriangle, BadgeCheck, Tag, SquareStack
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
