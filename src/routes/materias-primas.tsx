@@ -15,7 +15,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Search, Upload, Carrot, Box } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Upload, Carrot, Box, Layers } from "lucide-react";
 import { usePricingStore, custoUnitarioBase } from "@/store/usePricingStore";
 import { brl } from "@/lib/format";
 import { unidadeLabel } from "@/lib/units";
@@ -126,9 +126,9 @@ function MateriasPage() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-display font-semibold">Matérias-primas</h1>
+            <h1 className="text-3xl md:text-4xl font-display font-semibold">Ingredientes e Embalagens</h1>
             <p className="text-muted-foreground mt-1">
-              Ingredientes e embalagens. O custo unitário é calculado automaticamente.
+              Gerencie seus ingredientes e embalagens aqui. O custo unitário é calculado automaticamente.
             </p>
           </div>
           <div className="flex gap-2">
@@ -146,7 +146,7 @@ function MateriasPage() {
                 setOpen(true);
               }}
             >
-              <Plus className="h-4 w-4 mr-2" /> Nova matéria-prima
+              <Plus className="h-4 w-4 mr-2" /> Novo item
             </Button>
           </div>
         </div>

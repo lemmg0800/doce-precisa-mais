@@ -10,7 +10,7 @@ import type { Produto } from "@/store/types";
 import { brl, pct } from "@/lib/format";
 import {
   ChefHat, Package, Settings, ArrowRight, TrendingUp, TrendingDown,
-  Award, AlertTriangle, BadgeCheck, Tag, SquareStack
+  Award, AlertTriangle, BadgeCheck, Tag, SquareStack, Layers
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -65,14 +65,14 @@ function Home() {
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/materias-primas">Matérias-primas</Link>
+              <Link to="/materias-primas">Ingredientes e Embalagens</Link>
             </Button>
           </div>
         </div>
       </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <KpiCard icon={Package} label="Matérias-primas" value={materias.length.toString()} to="/materias-primas" />
+        <KpiCard icon={Layers} label="Ingredientes e Embalagens" value={materias.length.toString()} to="/materias-primas" />
         <KpiCard icon={ChefHat} label="Produtos" value={produtos.length.toString()} to="/produtos" />
         <KpiCard
           icon={Settings}

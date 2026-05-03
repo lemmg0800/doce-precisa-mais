@@ -57,10 +57,10 @@ export function MateriaFormDialog({ open, onOpenChange, initial }: Props) {
     try {
       if (initial) {
         await updateMateria(initial.id, form);
-        toast.success("Matéria-prima atualizada.");
+        toast.success("Salvo com sucesso.");
       } else {
         await addMateria(form);
-        toast.success("Matéria-prima criada.");
+        toast.success("Criado com sucesso.");
       }
       onOpenChange(false);
     } catch (e) {
@@ -76,7 +76,7 @@ export function MateriaFormDialog({ open, onOpenChange, initial }: Props) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">
-            {initial ? "Editar matéria-prima" : "Nova matéria-prima"}
+            {initial ? "Editar item" : "Novo item"}
           </DialogTitle>
           <DialogDescription>
             O custo unitário base é calculado automaticamente.

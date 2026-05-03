@@ -199,7 +199,7 @@ export function ReceitaFormDialog({ open, onOpenChange, initial }: Props) {
 
             {ingredientes.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                Cadastre ingredientes em &quot;Matérias-primas&quot; antes de criar receitas.
+                Cadastre ingredientes em &quot;Ingredientes e Embalagens&quot; antes de criar receitas.
               </p>
             )}
 
