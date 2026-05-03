@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { ChefHat, Package, Settings, LayoutDashboard, Box, LogOut, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import logo from "@/assets/logo.png";
 
 const links = [
   { to: "/", label: "Início", icon: LayoutDashboard },
@@ -21,11 +22,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-30 border-b bg-card/85 backdrop-blur supports-[backdrop-filter]:bg-card/70">
         <div className="mx-auto max-w-6xl flex items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-display font-bold">
-              ƒ
-            </div>
+            <img src={logo} alt="Logo" className="h-9 w-9 rounded-full object-cover" />
             <div className="leading-tight">
-              <div className="h-9 w-9 bg-primary text-primary-foreground grid place-items-center font-display font-sans opacity-100 rounded-full text-2xl font-thin mx-0 pt-0 pl-0 py-[22px] px-px pb-[24px] pr-0 my-0 text-center">𝓅</div>
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
                 Precificação artesanal
               </div>
