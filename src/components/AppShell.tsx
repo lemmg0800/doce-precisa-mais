@@ -8,7 +8,7 @@ import logo from "@/assets/logo.png";
 const links = [
   { to: "/", label: "Início", icon: LayoutDashboard },
   { to: "/produtos", label: "Produtos", icon: ChefHat },
-  { to: "/materias-primas", label: "Estoque", icon: Layers },
+  { to: "/materias-primas", label: "Ingredientes", icon: ChefHat },
   { to: "/receitas", label: "Receitas", icon: BookOpen },
   { to: "/kits", label: "Kits", icon: Box },
   { to: "/configuracoes", label: "Ajustes", icon: Settings },
