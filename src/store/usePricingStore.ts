@@ -89,7 +89,7 @@ const DEFAULT_CONFIG: Configuracoes = {
   valor_hora_trabalho: 0,
   tipo_arredondamento_preco: "nenhum",
   modo_custo_fixo: "manual",
-  producao_mensal_estimada: 0,
+  faturamento_mensal_estimado: 0,
 };
 
 async function getUserId(): Promise<string> {
@@ -238,7 +238,7 @@ export const usePricingStore = create<State>()((set, get) => ({
             valor_hora_trabalho: Number(cfgRow.valor_hora_trabalho),
             tipo_arredondamento_preco: cfgRow.tipo_arredondamento_preco as TipoArredondamento,
             modo_custo_fixo: ((cfgRow.modo_custo_fixo as ModoCustoFixo | undefined) ?? "manual"),
-            producao_mensal_estimada: Number(cfgRow.producao_mensal_estimada ?? 0),
+            faturamento_mensal_estimado: Number(cfgRow.faturamento_mensal_estimado ?? 0),
           }
         : DEFAULT_CONFIG;
 
@@ -711,60 +711,32 @@ export function gastosTotalMensal(gastos: GastoMensal[]): number {
   return gastos.reduce((s, g) => s + (Number(g.valor_mensal) || 0), 0);
 }
 
-/** Custo fixo por unidade produzida no mês. */
-export function custoFixoPorUnidade(gastos: GastoMensal[], producaoMensal: number): number {
-  if (!producaoMensal || producaoMensal <= 0) return 0;
-  return gastosTotalMensal(gastos) / producaoMensal;
-}
-
 /**
- * Calcula o percentual de custo fixo efetivo:
- * - Modo manual → usa o valor configurado
- * - Modo automático → calcula a partir dos gastos, produção mensal e custo médio dos produtos
- *   percentual = (custo_fixo_por_unidade / custo_medio_produtos) × 100
- *   Se faltar dado, mantém o percentual manual configurado.
+ * Calcula o percentual de custo fixo efetivo.
+ * - Modo manual → usa o valor configurado.
+ * - Modo automático → percentual = (total_gastos / faturamento_mensal_estimado) × 100.
+ *   Se faturamento <= 0, mantém o percentual manual configurado.
  */
 export function percentualCustoFixoEfetivo(
   config: Configuracoes,
   gastos: GastoMensal[],
-  custoMedio: number,
 ): number {
   if (config.modo_custo_fixo !== "automatico") return config.percentual_custo_fixo;
-  const cfPorUnidade = custoFixoPorUnidade(gastos, config.producao_mensal_estimada);
-  if (cfPorUnidade <= 0 || custoMedio <= 0) return config.percentual_custo_fixo;
-  return (cfPorUnidade / custoMedio) * 100;
+  const faturamento = config.faturamento_mensal_estimado || 0;
+  if (faturamento <= 0) return config.percentual_custo_fixo;
+  return (gastosTotalMensal(gastos) / faturamento) * 100;
 }
 
 /** Devolve uma cópia da config com o percentual_custo_fixo já resolvido. */
 export function configEfetiva(
   config: Configuracoes,
   gastos: GastoMensal[],
-  custoMedio: number,
 ): Configuracoes {
   if (config.modo_custo_fixo !== "automatico") return config;
   return {
     ...config,
-    percentual_custo_fixo: percentualCustoFixoEfetivo(config, gastos, custoMedio),
+    percentual_custo_fixo: percentualCustoFixoEfetivo(config, gastos),
   };
-}
-/**
- * Calcula o custo unitário base de cada produto (sem aplicar percentual de custo fixo)
- * e devolve a média. Usado para resolver o percentual no modo automático.
- */
-export function custoMedioProdutos(
-  produtos: Produto[],
-  materias: MateriaPrima[],
-  config: Configuracoes,
-  kits: KitEmbalagem[],
-  receitas: Receita[],
-): number {
-  if (produtos.length === 0) return 0;
-  const soma = produtos.reduce((s, p) => {
-    // calc não depende do percentual_custo_fixo para custo_unitario_produto
-    const c = calcularProduto(p, materias, config, kits, receitas);
-    return s + (c.custo_unitario_produto || 0);
-  }, 0);
-  return soma / produtos.length;
 }
 
 
@@ -957,11 +929,6 @@ export function calcularProduto(
 export function useConfigEfetiva(): Configuracoes {
   const config = usePricingStore((s) => s.config);
   const gastos = usePricingStore((s) => s.gastos);
-  const produtos = usePricingStore((s) => s.produtos);
-  const materias = usePricingStore((s) => s.materias);
-  const kits = usePricingStore((s) => s.kits);
-  const receitas = usePricingStore((s) => s.receitas);
   if (config.modo_custo_fixo !== "automatico") return config;
-  const custoMedio = custoMedioProdutos(produtos, materias, config, kits, receitas);
-  return configEfetiva(config, gastos, custoMedio);
+  return configEfetiva(config, gastos);
 }
