@@ -88,6 +88,6 @@ export interface Configuracoes {
   valor_hora_trabalho: number;
   tipo_arredondamento_preco: TipoArredondamento;
   modo_custo_fixo: ModoCustoFixo;
-  producao_mensal_estimada: number;
+  faturamento_mensal_estimado: number;
 }
 
