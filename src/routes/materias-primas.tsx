@@ -128,7 +128,7 @@ function MateriasPage() {
           <div>
             <h1 className="text-3xl md:text-4xl font-display font-semibold">Ingredientes e Embalagens</h1>
             <p className="text-muted-foreground mt-1">
-              Ingredientes e embalagens. O custo unitário é calculado automaticamente.
+              Gerencie seus ingredientes e embalagens aqui. O custo unitário é calculado automaticamente.
             </p>
           </div>
           <div className="flex gap-2">
@@ -146,7 +146,7 @@ function MateriasPage() {
                 setOpen(true);
               }}
             >
-              <Plus className="h-4 w-4 mr-2" /> Nova matéria-prima
+              <Plus className="h-4 w-4 mr-2" /> Novo item
             </Button>
           </div>
         </div>
