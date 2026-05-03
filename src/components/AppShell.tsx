@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
-import { ChefHat, Package, Settings, LayoutDashboard, Box, LogOut, BookOpen } from "lucide-react";
+import { ChefHat, Package, Settings, LayoutDashboard, Box, LogOut, BookOpen, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
@@ -8,7 +8,7 @@ import logo from "@/assets/logo.png";
 const links = [
   { to: "/", label: "Início", icon: LayoutDashboard },
   { to: "/produtos", label: "Produtos", icon: ChefHat },
-  { to: "/materias-primas", label: "Matérias", icon: Package },
+  { to: "/materias-primas", label: "Estoque", icon: Layers },
   { to: "/receitas", label: "Receitas", icon: BookOpen },
   { to: "/kits", label: "Kits", icon: Box },
   { to: "/configuracoes", label: "Ajustes", icon: Settings },
