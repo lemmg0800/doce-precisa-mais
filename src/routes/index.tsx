@@ -10,7 +10,7 @@ import type { Produto } from "@/store/types";
 import { brl, pct } from "@/lib/format";
 import {
   ChefHat, Package, Settings, ArrowRight, TrendingUp, TrendingDown,
-  Award, AlertTriangle, BadgeCheck, Tag,
+  Award, AlertTriangle, BadgeCheck, Tag, SquareStack
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -61,7 +61,7 @@ function Home() {
           <div className="flex flex-wrap gap-2">
             <Button asChild>
               <Link to="/produtos">
-                <ChefHat className="h-4 w-4 mr-1" /> Novo produto
+                <SquareStack className="h-4 w-4 mr-1" /> Ver produtos
               </Link>
             </Button>
             <Button asChild variant="outline">
