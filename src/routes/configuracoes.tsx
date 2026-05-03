@@ -13,8 +13,6 @@ import { CurrencyInput, NumberInput } from "@/components/inputs";
 import {
   usePricingStore,
   gastosTotalMensal,
-  custoFixoPorUnidade,
-  custoMedioProdutos,
   percentualCustoFixoEfetivo,
 } from "@/store/usePricingStore";
 import type { TipoArredondamento, GastoMensal } from "@/store/types";
@@ -36,10 +34,6 @@ function ConfigPage() {
   const addGasto = usePricingStore((s) => s.addGasto);
   const updateGasto = usePricingStore((s) => s.updateGasto);
   const deleteGasto = usePricingStore((s) => s.deleteGasto);
-  const produtos = usePricingStore((s) => s.produtos);
-  const materias = usePricingStore((s) => s.materias);
-  const kits = usePricingStore((s) => s.kits);
-  const receitas = usePricingStore((s) => s.receitas);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [newPwd, setNewPwd] = useState("");
