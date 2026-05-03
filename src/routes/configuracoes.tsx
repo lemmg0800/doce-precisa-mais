@@ -200,7 +200,7 @@ function ConfigPage() {
               <span className="text-sm">
                 <span className="font-medium">Calcular custo fixo automaticamente</span>
                 <span className="block text-xs text-muted-foreground">
-                  Soma seus gastos mensais e divide pela produção estimada.
+                  Soma seus gastos mensais e divide pelo faturamento médio mensal.
                 </span>
               </span>
               <Switch
@@ -213,13 +213,14 @@ function ConfigPage() {
               <>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label>Produção mensal estimada (un.)</Label>
-                    <NumberInput
-                      value={config.producao_mensal_estimada}
-                      onChange={(v) => set({ producao_mensal_estimada: v })}
-                      min={0}
-                      placeholder="Ex.: 200"
+                    <Label>Faturamento mensal estimado (R$)</Label>
+                    <CurrencyInput
+                      value={config.faturamento_mensal_estimado}
+                      onChange={(v) => set({ faturamento_mensal_estimado: v })}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Informe quanto você fatura, em média, por mês.
+                    </p>
                   </div>
                 </div>
 
@@ -293,8 +294,8 @@ function ConfigPage() {
                     <div className="font-display text-lg font-semibold tabular-nums">{brl(totalGastos)}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground text-xs">Custo fixo por unidade</div>
-                    <div className="font-display text-lg font-semibold tabular-nums">{brl(cfPorUnidade)}</div>
+                    <div className="text-muted-foreground text-xs">Faturamento mensal</div>
+                    <div className="font-display text-lg font-semibold tabular-nums">{brl(config.faturamento_mensal_estimado)}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground text-xs">Percentual aplicado</div>
@@ -304,14 +305,14 @@ function ConfigPage() {
                   </div>
                 </div>
 
-                {(gastos.length === 0 || config.producao_mensal_estimada <= 0) && (
+                {faturamentoInvalido && (
                   <p className="text-xs text-destructive">
-                    Para calcular automaticamente: cadastre ao menos um gasto e informe a produção mensal estimada.
+                    Informe um faturamento mensal maior que zero.
                   </p>
                 )}
-                {gastos.length > 0 && config.producao_mensal_estimada > 0 && custoMedio <= 0 && (
+                {!faturamentoInvalido && gastos.length === 0 && (
                   <p className="text-xs text-muted-foreground">
-                    Cadastre produtos para que o percentual seja calculado. Enquanto isso, o valor manual ({config.percentual_custo_fixo}%) continua sendo usado.
+                    Cadastre ao menos um gasto mensal para que o percentual seja calculado. Enquanto isso, o valor manual ({config.percentual_custo_fixo}%) continua sendo usado.
                   </p>
                 )}
               </>
