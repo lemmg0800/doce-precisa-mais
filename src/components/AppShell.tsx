@@ -25,7 +25,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               ƒ
             </div>
             <div className="leading-tight">
-              <div className="font-display text-lg font-semibold">Forneria</div>
+              <div className="h-9 w-9 bg-primary text-primary-foreground grid place-items-center font-display font-sans opacity-100 rounded-full text-2xl font-thin mx-0 pt-0 pl-0 py-[22px] px-px pb-[24px] pr-0 my-0 text-center">𝓅</div>
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
                 Precificação artesanal
               </div>
