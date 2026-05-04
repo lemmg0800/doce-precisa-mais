@@ -72,7 +72,7 @@ function Home() {
       </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <KpiCard icon={Layers} label="Ingredientes e Embalagens" value={materias.length.toString()} to="/materias-primas" />
+        <KpiCard icon={ChefHat} label="Ingredientes e Embalagens" value={materias.length.toString()} to="/materias-primas" />
         <KpiCard icon={ChefHat} label="Produtos" value={produtos.length.toString()} to="/produtos" />
         <KpiCard
           icon={Settings}
