@@ -53,6 +53,22 @@ function AuthPage() {
     }
   };
 
+  const signInWithGoogle = async () => {
+    setBusy(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) throw result.error;
+      if (result.redirected) return;
+      navigate({ to: "/" });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erro ao entrar com Google";
+      toast.error(msg);
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="min-h-screen grid place-items-center bg-background px-4">
       <Card className="w-full max-w-md">
