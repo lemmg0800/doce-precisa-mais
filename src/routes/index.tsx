@@ -65,7 +65,9 @@ function Home() {
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/materias-primas">Ingredientes e Embalagens</Link>
+              <Link to="/materias-primas">
+                <ChefHat className="h-4 w-4 mr-1" /> Ingredientes e Embalagens
+              </Link>
             </Button>
           </div>
         </div>
