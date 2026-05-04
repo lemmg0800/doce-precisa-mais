@@ -15,7 +15,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Search, Upload, Carrot, Box, Layers } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Upload, ChefHat, Box, Layers } from "lucide-react";
 import { usePricingStore, custoUnitarioBase } from "@/store/usePricingStore";
 import { brl } from "@/lib/format";
 import { unidadeLabel } from "@/lib/units";
