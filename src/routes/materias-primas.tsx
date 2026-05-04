@@ -15,7 +15,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Search, Upload, Carrot, Box, Layers } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Upload, ChefHat, Box, Layers } from "lucide-react";
 import { usePricingStore, custoUnitarioBase } from "@/store/usePricingStore";
 import { brl } from "@/lib/format";
 import { unidadeLabel } from "@/lib/units";
@@ -166,7 +166,7 @@ function MateriasPage() {
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <span className="h-9 w-9 rounded-lg bg-accent/30 grid place-items-center">
-                  <Carrot className="h-4 w-4 text-primary" />
+                  <ChefHat className="h-4 w-4 text-primary" />
                 </span>
                 <span className="font-display text-lg">Ingredientes</span>
                 <Badge variant="secondary">{ingredientes.length}</Badge>
