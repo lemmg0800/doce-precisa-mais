@@ -535,7 +535,7 @@ export function ProdutoFormDialog({ open, onOpenChange, initial }: Props) {
                         }}
                       />
                       <p className="text-[11px] text-muted-foreground mt-1">
-                        quantidade em {unidadeR}
+                        quantidade utilizada
                       </p>
                     </div>
                     <div className="col-span-6 sm:col-span-2 text-right text-sm tabular-nums font-medium">
