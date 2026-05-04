@@ -61,12 +61,12 @@ function Home() {
           <div className="flex flex-wrap gap-2">
             <Button asChild>
               <Link to="/produtos">
-                <Layers className="h-4 w-4 mr-1" /> Ver produtos
+                <ChefHat className="h-4 w-4 mr-1" /> Ver produtos
               </Link>
             </Button>
             <Button asChild variant="outline">
               <Link to="/materias-primas">
-                <Layers className="h-4 w-4 mr-1" /> Ingredientes e Embalagens
+                <ChefHat className="h-4 w-4 mr-1" /> Ingredientes e Embalagens
               </Link>
             </Button>
           </div>
@@ -74,7 +74,7 @@ function Home() {
       </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <KpiCard icon={Layers} label="Ingredientes e Embalagens" value={materias.length.toString()} to="/materias-primas" />
+        <KpiCard icon={ChefHat} label="Ingredientes e Embalagens" value={materias.length.toString()} to="/materias-primas" />
         <KpiCard icon={ChefHat} label="Produtos" value={produtos.length.toString()} to="/produtos" />
         <KpiCard
           icon={Settings}
