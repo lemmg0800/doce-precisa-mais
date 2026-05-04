@@ -102,6 +102,29 @@ function AuthPage() {
             <Button type="submit" disabled={busy} size="lg">
               {busy ? "Aguarde..." : mode === "signin" ? "Entrar" : "Criar conta"}
             </Button>
+
+            <div className="relative my-1">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">ou</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              disabled={busy}
+              onClick={signInWithGoogle}
+            >
+              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden>
+                <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.42-1.7 4.16-5.5 4.16-3.31 0-6.01-2.74-6.01-6.13s2.7-6.13 6.01-6.13c1.88 0 3.14.8 3.86 1.49l2.63-2.53C16.83 3.42 14.66 2.5 12 2.5 6.76 2.5 2.5 6.76 2.5 12s4.26 9.5 9.5 9.5c5.48 0 9.11-3.85 9.11-9.27 0-.62-.07-1.1-.16-1.53H12z"/>
+              </svg>
+              Entrar com Google
+            </Button>
+
             <button
               type="button"
               className="text-sm text-muted-foreground hover:text-foreground"
