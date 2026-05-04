@@ -61,12 +61,12 @@ function Home() {
           <div className="flex flex-wrap gap-2">
             <Button asChild>
               <Link to="/produtos">
-                <SquareStack className="h-4 w-4 mr-1" /> Ver produtos
+                <Layers className="h-4 w-4 mr-1" /> Ver produtos
               </Link>
             </Button>
             <Button asChild variant="outline">
               <Link to="/materias-primas">
-                <ChefHat className="h-4 w-4 mr-1" /> Ingredientes e Embalagens
+                <Layers className="h-4 w-4 mr-1" /> Ingredientes e Embalagens
               </Link>
             </Button>
           </div>
