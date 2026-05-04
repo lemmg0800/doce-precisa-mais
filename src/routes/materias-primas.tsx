@@ -166,7 +166,7 @@ function MateriasPage() {
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <span className="h-9 w-9 rounded-lg bg-accent/30 grid place-items-center">
-                  <Carrot className="h-4 w-4 text-primary" />
+                  <ChefHat className="h-4 w-4 text-primary" />
                 </span>
                 <span className="font-display text-lg">Ingredientes</span>
                 <Badge variant="secondary">{ingredientes.length}</Badge>
