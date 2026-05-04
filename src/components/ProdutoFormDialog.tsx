@@ -474,8 +474,9 @@ export function ProdutoFormDialog({ open, onOpenChange, initial }: Props) {
                 const r = receitasAll.find((x) => x.id === rec.receita_id);
                 const custoUnit = r ? custoUnitarioReceita(r, materias) : 0;
                 const custoTotalReceita = r
-                  ? custoUnit * (r.rendimento || 0) * (rec.quantidade_utilizada || 0)
+                  ? custoUnit * (rec.quantidade_utilizada || 0)
                   : 0;
+                const unidadeR = r ? unidadeLabel(r.unidade_rendimento ?? "g") : "g";
                 return (
                   <div
                     key={idx}
@@ -505,14 +506,14 @@ export function ProdutoFormDialog({ open, onOpenChange, initial }: Props) {
                         <SelectContent>
                           {receitasAll.map((rr) => (
                             <SelectItem key={rr.id} value={rr.id}>
-                              {rr.nome_receita} — {brl(custoUnitarioReceita(rr, materias) * (rr.rendimento || 0))}/receita
+                              {rr.nome_receita} — {brl(custoUnitarioReceita(rr, materias))}/{unidadeLabel(rr.unidade_rendimento ?? "g")}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                       {r && (
                         <p className="text-[11px] text-muted-foreground mt-1">
-                          Custo da receita inteira: {brl(custoUnit * (r.rendimento || 0))}
+                          Rendimento total: {r.rendimento} {unidadeR} · custo {brl(custoUnit)}/{unidadeR}
                         </p>
                       )}
                     </div>
@@ -521,7 +522,8 @@ export function ProdutoFormDialog({ open, onOpenChange, initial }: Props) {
                         value={rec.quantidade_utilizada}
                         autoFocus={focusQtdIdx === -(idx + 1)}
                         min={0}
-                        placeholder="1"
+                        placeholder="0"
+                        suffix={unidadeR}
                         onChange={(v) => {
                           if (focusQtdIdx === -(idx + 1)) setFocusQtdIdx(null);
                           setForm((f) => ({
@@ -533,7 +535,7 @@ export function ProdutoFormDialog({ open, onOpenChange, initial }: Props) {
                         }}
                       />
                       <p className="text-[11px] text-muted-foreground mt-1">
-                        receita(s)
+                        quantidade em {unidadeR}
                       </p>
                     </div>
                     <div className="col-span-6 sm:col-span-2 text-right text-sm tabular-nums font-medium">

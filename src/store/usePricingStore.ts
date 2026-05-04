@@ -841,7 +841,8 @@ export function calcularProduto(
   const custo_total_receitas_reutilizaveis = (produto.receitas ?? []).reduce((sum, pr) => {
     const r = receitas.find((x) => x.id === pr.receita_id);
     if (!r) return sum;
-    return sum + custoUnitarioReceita(r, materias) * (pr.quantidade_utilizada || 0) * (r.rendimento || 0);
+    // quantidade_utilizada agora representa a quantidade na unidade do rendimento da receita (ex: gramas)
+    return sum + custoUnitarioReceita(r, materias) * (pr.quantidade_utilizada || 0);
   }, 0);
 
   const custo_total_combinado = custo_total_receita + custo_total_receitas_reutilizaveis;
