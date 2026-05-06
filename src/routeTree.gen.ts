@@ -19,8 +19,6 @@ import { Route as CanceladoRouteImport } from './routes/cancelado'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AssinaturaRouteImport } from './routes/assinatura'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiCriarCheckoutRouteImport } from './routes/api/criar-checkout'
-import { Route as ApiPublicWebhookStripeRouteImport } from './routes/api/public/webhook.stripe'
 
 const SucessoRoute = SucessoRouteImport.update({
   id: '/sucesso',
@@ -72,16 +70,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiCriarCheckoutRoute = ApiCriarCheckoutRouteImport.update({
-  id: '/api/criar-checkout',
-  path: '/api/criar-checkout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicWebhookStripeRoute = ApiPublicWebhookStripeRouteImport.update({
-  id: '/api/public/webhook/stripe',
-  path: '/api/public/webhook/stripe',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -94,8 +82,6 @@ export interface FileRoutesByFullPath {
   '/produtos': typeof ProdutosRoute
   '/receitas': typeof ReceitasRoute
   '/sucesso': typeof SucessoRoute
-  '/api/criar-checkout': typeof ApiCriarCheckoutRoute
-  '/api/public/webhook/stripe': typeof ApiPublicWebhookStripeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,8 +94,6 @@ export interface FileRoutesByTo {
   '/produtos': typeof ProdutosRoute
   '/receitas': typeof ReceitasRoute
   '/sucesso': typeof SucessoRoute
-  '/api/criar-checkout': typeof ApiCriarCheckoutRoute
-  '/api/public/webhook/stripe': typeof ApiPublicWebhookStripeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -123,8 +107,6 @@ export interface FileRoutesById {
   '/produtos': typeof ProdutosRoute
   '/receitas': typeof ReceitasRoute
   '/sucesso': typeof SucessoRoute
-  '/api/criar-checkout': typeof ApiCriarCheckoutRoute
-  '/api/public/webhook/stripe': typeof ApiPublicWebhookStripeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -139,8 +121,6 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/receitas'
     | '/sucesso'
-    | '/api/criar-checkout'
-    | '/api/public/webhook/stripe'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -153,8 +133,6 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/receitas'
     | '/sucesso'
-    | '/api/criar-checkout'
-    | '/api/public/webhook/stripe'
   id:
     | '__root__'
     | '/'
@@ -167,8 +145,6 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/receitas'
     | '/sucesso'
-    | '/api/criar-checkout'
-    | '/api/public/webhook/stripe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -182,8 +158,6 @@ export interface RootRouteChildren {
   ProdutosRoute: typeof ProdutosRoute
   ReceitasRoute: typeof ReceitasRoute
   SucessoRoute: typeof SucessoRoute
-  ApiCriarCheckoutRoute: typeof ApiCriarCheckoutRoute
-  ApiPublicWebhookStripeRoute: typeof ApiPublicWebhookStripeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -258,20 +232,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/criar-checkout': {
-      id: '/api/criar-checkout'
-      path: '/api/criar-checkout'
-      fullPath: '/api/criar-checkout'
-      preLoaderRoute: typeof ApiCriarCheckoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/webhook/stripe': {
-      id: '/api/public/webhook/stripe'
-      path: '/api/public/webhook/stripe'
-      fullPath: '/api/public/webhook/stripe'
-      preLoaderRoute: typeof ApiPublicWebhookStripeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -286,8 +246,6 @@ const rootRouteChildren: RootRouteChildren = {
   ProdutosRoute: ProdutosRoute,
   ReceitasRoute: ReceitasRoute,
   SucessoRoute: SucessoRoute,
-  ApiCriarCheckoutRoute: ApiCriarCheckoutRoute,
-  ApiPublicWebhookStripeRoute: ApiPublicWebhookStripeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
