@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/assinatura")({
@@ -29,13 +30,11 @@ function AssinaturaPage() {
     }
     setLoading(plano);
     try {
-      const res = await fetch("/api/criar-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.id, email: user.email, plano }),
+      const { data, error } = await supabase.functions.invoke("criar-checkout", {
+        body: { user_id: user.id, email: user.email, plano },
       });
-      const data = await res.json();
-      if (!res.ok || !data.url) throw new Error(data.error || "Erro ao criar checkout");
+      if (error) throw error;
+      if (!data?.url) throw new Error("URL de checkout não retornada");
       window.location.href = data.url;
     } catch (e: any) {
       toast.error(e.message);
