@@ -2,6 +2,9 @@ import { Outlet, Link, createRootRoute, useLocation, useNavigate } from "@tansta
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
+import { AccessGate } from "@/components/AccessGate";
+
+const PUBLIC_PATHS = ["/auth", "/assinatura", "/sucesso", "/cancelado"];
 
 function NotFoundComponent() {
   return (
@@ -60,5 +63,12 @@ function AuthGate() {
       </div>
     );
   }
-  return <Outlet />;
+
+  const isPublic = PUBLIC_PATHS.includes(loc.pathname);
+  if (!session || isPublic) return <Outlet />;
+  return (
+    <AccessGate>
+      <Outlet />
+    </AccessGate>
+  );
 }

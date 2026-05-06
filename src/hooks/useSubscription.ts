@@ -1,0 +1,93 @@
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
+
+export type Assinatura = {
+  user_id: string;
+  status: string;
+  plano: string | null;
+  current_period_end: string | null;
+  trial_ends_at: string | null;
+};
+
+export type AccessInfo = {
+  loading: boolean;
+  hasAccess: boolean;
+  reason: "trial" | "ativo" | "atrasado_tolerancia" | "expirado" | "sem_assinatura";
+  trialDaysLeft: number | null;
+  graceDaysLeft: number | null;
+  assinatura: Assinatura | null;
+  refresh: () => Promise<void>;
+};
+
+function diffDays(target: Date) {
+  return Math.ceil((target.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+}
+
+export function useSubscription(): AccessInfo {
+  const { user, ready } = useAuth();
+  const [assinatura, setAssinatura] = useState<Assinatura | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    if (!user) {
+      setAssinatura(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const { data } = await supabase
+      .from("assinaturas")
+      .select("user_id,status,plano,current_period_end,trial_ends_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setAssinatura(data as Assinatura | null);
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    if (!ready) return;
+    load();
+  }, [ready, load]);
+
+  let hasAccess = false;
+  let reason: AccessInfo["reason"] = "sem_assinatura";
+  let trialDaysLeft: number | null = null;
+  let graceDaysLeft: number | null = null;
+
+  if (assinatura) {
+    const now = new Date();
+    const trialEnd = assinatura.trial_ends_at ? new Date(assinatura.trial_ends_at) : null;
+    const periodEnd = assinatura.current_period_end ? new Date(assinatura.current_period_end) : null;
+
+    if (assinatura.status === "ativo" && periodEnd && periodEnd >= now) {
+      hasAccess = true;
+      reason = "ativo";
+    } else if (assinatura.status === "atrasado" && periodEnd) {
+      const grace = new Date(periodEnd.getTime() + 3 * 24 * 60 * 60 * 1000);
+      if (grace >= now) {
+        hasAccess = true;
+        reason = "atrasado_tolerancia";
+        graceDaysLeft = Math.max(0, diffDays(grace));
+      } else {
+        reason = "expirado";
+      }
+    } else if (trialEnd && trialEnd >= now) {
+      hasAccess = true;
+      reason = "trial";
+      trialDaysLeft = Math.max(0, diffDays(trialEnd));
+    } else {
+      reason = "expirado";
+    }
+  }
+
+  return {
+    loading: loading || !ready,
+    hasAccess,
+    reason,
+    trialDaysLeft,
+    graceDaysLeft,
+    assinatura,
+    refresh: load,
+  };
+}
