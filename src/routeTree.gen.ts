@@ -9,14 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SucessoRouteImport } from './routes/sucesso'
 import { Route as ReceitasRouteImport } from './routes/receitas'
 import { Route as ProdutosRouteImport } from './routes/produtos'
 import { Route as MateriasPrimasRouteImport } from './routes/materias-primas'
 import { Route as KitsRouteImport } from './routes/kits'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as CanceladoRouteImport } from './routes/cancelado'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AssinaturaRouteImport } from './routes/assinatura'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiCriarCheckoutRouteImport } from './routes/api/criar-checkout'
+import { Route as ApiPublicWebhookStripeRouteImport } from './routes/api/public/webhook.stripe'
 
+const SucessoRoute = SucessoRouteImport.update({
+  id: '/sucesso',
+  path: '/sucesso',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReceitasRoute = ReceitasRouteImport.update({
   id: '/receitas',
   path: '/receitas',
@@ -42,9 +52,19 @@ const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CanceladoRoute = CanceladoRouteImport.update({
+  id: '/cancelado',
+  path: '/cancelado',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssinaturaRoute = AssinaturaRouteImport.update({
+  id: '/assinatura',
+  path: '/assinatura',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -52,77 +72,129 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCriarCheckoutRoute = ApiCriarCheckoutRouteImport.update({
+  id: '/api/criar-checkout',
+  path: '/api/criar-checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWebhookStripeRoute = ApiPublicWebhookStripeRouteImport.update({
+  id: '/api/public/webhook/stripe',
+  path: '/api/public/webhook/stripe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/assinatura': typeof AssinaturaRoute
   '/auth': typeof AuthRoute
+  '/cancelado': typeof CanceladoRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/kits': typeof KitsRoute
   '/materias-primas': typeof MateriasPrimasRoute
   '/produtos': typeof ProdutosRoute
   '/receitas': typeof ReceitasRoute
+  '/sucesso': typeof SucessoRoute
+  '/api/criar-checkout': typeof ApiCriarCheckoutRoute
+  '/api/public/webhook/stripe': typeof ApiPublicWebhookStripeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assinatura': typeof AssinaturaRoute
   '/auth': typeof AuthRoute
+  '/cancelado': typeof CanceladoRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/kits': typeof KitsRoute
   '/materias-primas': typeof MateriasPrimasRoute
   '/produtos': typeof ProdutosRoute
   '/receitas': typeof ReceitasRoute
+  '/sucesso': typeof SucessoRoute
+  '/api/criar-checkout': typeof ApiCriarCheckoutRoute
+  '/api/public/webhook/stripe': typeof ApiPublicWebhookStripeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/assinatura': typeof AssinaturaRoute
   '/auth': typeof AuthRoute
+  '/cancelado': typeof CanceladoRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/kits': typeof KitsRoute
   '/materias-primas': typeof MateriasPrimasRoute
   '/produtos': typeof ProdutosRoute
   '/receitas': typeof ReceitasRoute
+  '/sucesso': typeof SucessoRoute
+  '/api/criar-checkout': typeof ApiCriarCheckoutRoute
+  '/api/public/webhook/stripe': typeof ApiPublicWebhookStripeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/assinatura'
     | '/auth'
+    | '/cancelado'
     | '/configuracoes'
     | '/kits'
     | '/materias-primas'
     | '/produtos'
     | '/receitas'
+    | '/sucesso'
+    | '/api/criar-checkout'
+    | '/api/public/webhook/stripe'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/assinatura'
     | '/auth'
+    | '/cancelado'
     | '/configuracoes'
     | '/kits'
     | '/materias-primas'
     | '/produtos'
     | '/receitas'
+    | '/sucesso'
+    | '/api/criar-checkout'
+    | '/api/public/webhook/stripe'
   id:
     | '__root__'
     | '/'
+    | '/assinatura'
     | '/auth'
+    | '/cancelado'
     | '/configuracoes'
     | '/kits'
     | '/materias-primas'
     | '/produtos'
     | '/receitas'
+    | '/sucesso'
+    | '/api/criar-checkout'
+    | '/api/public/webhook/stripe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AssinaturaRoute: typeof AssinaturaRoute
   AuthRoute: typeof AuthRoute
+  CanceladoRoute: typeof CanceladoRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   KitsRoute: typeof KitsRoute
   MateriasPrimasRoute: typeof MateriasPrimasRoute
   ProdutosRoute: typeof ProdutosRoute
   ReceitasRoute: typeof ReceitasRoute
+  SucessoRoute: typeof SucessoRoute
+  ApiCriarCheckoutRoute: typeof ApiCriarCheckoutRoute
+  ApiPublicWebhookStripeRoute: typeof ApiPublicWebhookStripeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sucesso': {
+      id: '/sucesso'
+      path: '/sucesso'
+      fullPath: '/sucesso'
+      preLoaderRoute: typeof SucessoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/receitas': {
       id: '/receitas'
       path: '/receitas'
@@ -158,11 +230,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfiguracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cancelado': {
+      id: '/cancelado'
+      path: '/cancelado'
+      fullPath: '/cancelado'
+      preLoaderRoute: typeof CanceladoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assinatura': {
+      id: '/assinatura'
+      path: '/assinatura'
+      fullPath: '/assinatura'
+      preLoaderRoute: typeof AssinaturaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -172,17 +258,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/criar-checkout': {
+      id: '/api/criar-checkout'
+      path: '/api/criar-checkout'
+      fullPath: '/api/criar-checkout'
+      preLoaderRoute: typeof ApiCriarCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhook/stripe': {
+      id: '/api/public/webhook/stripe'
+      path: '/api/public/webhook/stripe'
+      fullPath: '/api/public/webhook/stripe'
+      preLoaderRoute: typeof ApiPublicWebhookStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AssinaturaRoute: AssinaturaRoute,
   AuthRoute: AuthRoute,
+  CanceladoRoute: CanceladoRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
   KitsRoute: KitsRoute,
   MateriasPrimasRoute: MateriasPrimasRoute,
   ProdutosRoute: ProdutosRoute,
   ReceitasRoute: ReceitasRoute,
+  SucessoRoute: SucessoRoute,
+  ApiCriarCheckoutRoute: ApiCriarCheckoutRoute,
+  ApiPublicWebhookStripeRoute: ApiPublicWebhookStripeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
