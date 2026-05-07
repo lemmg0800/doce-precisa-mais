@@ -28,6 +28,8 @@ export const Route = createFileRoute("/configuracoes")({
 });
 
 function ConfigPage() {
+  const { reason } = useSubscription();
+  const isAssinante = reason === "ativo";
   const config = usePricingStore((s) => s.config);
   const updateConfig = usePricingStore((s) => s.updateConfig);
   const exportAll = usePricingStore((s) => s.exportAll);
