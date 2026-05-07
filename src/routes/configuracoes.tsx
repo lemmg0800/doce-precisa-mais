@@ -17,15 +17,19 @@ import {
 } from "@/store/usePricingStore";
 import type { TipoArredondamento, GastoMensal } from "@/store/types";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Upload, KeyRound, Calculator, Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { Download, Upload, KeyRound, Calculator, Plus, Trash2, Pencil, Check, X, Lock } from "lucide-react";
 import { brl } from "@/lib/format";
 import { toast } from "sonner";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/configuracoes")({
   component: ConfigPage,
 });
 
 function ConfigPage() {
+  const { reason } = useSubscription();
+  const isAssinante = reason === "ativo";
   const config = usePricingStore((s) => s.config);
   const updateConfig = usePricingStore((s) => s.updateConfig);
   const exportAll = usePricingStore((s) => s.exportAll);
@@ -81,6 +85,10 @@ function ConfigPage() {
   };
 
   const handleExport = () => {
+    if (!isAssinante) {
+      toast.error("Exportação disponível apenas para assinantes ativos");
+      return;
+    }
     const data = exportAll();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -327,21 +335,42 @@ function ConfigPage() {
               Seus dados ficam salvos na nuvem. Exporte para guardar uma cópia local.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" /> Baixar backup agora
-            </Button>
-            <Button variant="outline" onClick={() => fileRef.current?.click()}>
-              <Upload className="h-4 w-4 mr-2" /> Importar JSON
-            </Button>
-            <input
-              ref={fileRef} type="file" accept="application/json" hidden
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) handleImport(f);
-                e.target.value = "";
-              }}
-            />
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={handleExport}
+                disabled={!isAssinante}
+                title={!isAssinante ? "Exportação disponível apenas para assinantes ativos" : undefined}
+              >
+                {isAssinante ? (
+                  <Download className="h-4 w-4 mr-2" />
+                ) : (
+                  <Lock className="h-4 w-4 mr-2" />
+                )}
+                Baixar backup agora
+              </Button>
+              <Button variant="outline" onClick={() => fileRef.current?.click()}>
+                <Upload className="h-4 w-4 mr-2" /> Importar JSON
+              </Button>
+              <input
+                ref={fileRef} type="file" accept="application/json" hidden
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImport(f);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+            {!isAssinante && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Lock className="h-3 w-3" />
+                Exportação disponível apenas para assinantes ativos.{" "}
+                <Link to="/assinatura" className="text-primary hover:underline">
+                  Assinar agora
+                </Link>
+              </p>
+            )}
           </CardContent>
         </Card>
 
