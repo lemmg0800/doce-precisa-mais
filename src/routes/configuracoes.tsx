@@ -85,6 +85,10 @@ function ConfigPage() {
   };
 
   const handleExport = () => {
+    if (!isAssinante) {
+      toast.error("Exportação disponível apenas para assinantes ativos");
+      return;
+    }
     const data = exportAll();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
