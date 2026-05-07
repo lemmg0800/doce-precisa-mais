@@ -160,7 +160,7 @@ function AssinaturaPage() {
           </p>
           <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
             <Lock className="h-4 w-4" />
-            O acesso completo está bloqueado até a ativação de um plano.
+            O acesso completo será bloqueado até a ativação de um plano.
           </p>
           <p className="text-xs text-muted-foreground flex items-center justify-center gap-2 pt-2">
             <ShieldCheck className="h-3 w-3" />
