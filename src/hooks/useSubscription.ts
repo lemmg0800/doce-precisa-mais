@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -24,31 +25,54 @@ function diffDays(target: Date) {
   return Math.ceil((target.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+
 export function useSubscription(): AccessInfo {
   const { user, ready } = useAuth();
+  const location = useLocation();
   const [assinatura, setAssinatura] = useState<Assinatura | null>(null);
   const [loading, setLoading] = useState(true);
+  const lastFetchRef = useRef<number>(0);
 
-  const load = useCallback(async () => {
-    if (!user) {
-      setAssinatura(null);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    const { data } = await supabase
-      .from("assinaturas")
-      .select("user_id,status,plano,current_period_end,trial_ends_at")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    setAssinatura(data as Assinatura | null);
-    setLoading(false);
-  }, [user]);
+  const load = useCallback(
+    async (silent = false) => {
+      if (!user) {
+        setAssinatura(null);
+        setLoading(false);
+        return;
+      }
+      if (!silent) setLoading(true);
+      const { data } = await supabase
+        .from("assinaturas")
+        .select("user_id,status,plano,current_period_end,trial_ends_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setAssinatura(data as Assinatura | null);
+      lastFetchRef.current = Date.now();
+      if (!silent) setLoading(false);
+    },
+    [user],
+  );
 
+  // Initial load when auth becomes ready / user changes
   useEffect(() => {
     if (!ready) return;
-    load();
+    load(false);
   }, [ready, load]);
+
+  // Silent refresh on route change (only if stale > 30s)
+  useEffect(() => {
+    if (!ready || !user) return;
+    if (Date.now() - lastFetchRef.current < 30_000) return;
+    load(true);
+  }, [location.pathname, ready, user, load]);
+
+  // Silent background refresh
+  useEffect(() => {
+    if (!ready || !user) return;
+    const id = setInterval(() => load(true), REFRESH_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [ready, user, load]);
 
   let hasAccess = false;
   let reason: AccessInfo["reason"] = "sem_assinatura";
