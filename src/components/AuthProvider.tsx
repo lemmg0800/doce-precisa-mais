@@ -18,14 +18,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadAll = usePricingStore((s) => s.loadAll);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
-      if (s) {
-        // defer fetch to avoid recursion in callback
+      // Only (re)load on real sign-in / sign-out events.
+      // Ignore TOKEN_REFRESHED / USER_UPDATED / INITIAL_SESSION which fire on tab focus
+      // and would otherwise reset stores and unmount forms in progress.
+      if (event === "SIGNED_IN") {
         setTimeout(() => {
           loadAll().catch(() => {});
         }, 0);
-      } else {
+      } else if (event === "SIGNED_OUT") {
         reset();
       }
     });
