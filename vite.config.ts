@@ -9,7 +9,7 @@ export default defineConfig({
     tanstackStart({
       srcDirectory: "src",
       router: {
-        entry: "./src/router.tsx",
+        entry: "./router.tsx",
         routesDirectory: "routes",
         generatedRouteTree: "routeTree.gen.ts",
         basepath: "/",
