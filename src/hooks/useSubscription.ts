@@ -31,24 +31,25 @@ export function useSubscription(): AccessInfo {
   const { user, ready } = useAuth();
   const [assinatura, setAssinatura] = useState<Assinatura | null>(null);
   const [loading, setLoading] = useState(true);
-  const lastFetchRef = useRef<number>(0);
+  const hasLoadedOnceRef = useRef(false);
 
   const load = useCallback(
     async (silent = false) => {
       if (!user) {
         setAssinatura(null);
         setLoading(false);
+        hasLoadedOnceRef.current = false;
         return;
       }
-      if (!silent) setLoading(true);
+      if (!silent && !hasLoadedOnceRef.current) setLoading(true);
       const { data } = await supabase
         .from("assinaturas")
         .select("user_id,status,plano,current_period_end,trial_ends_at")
         .eq("user_id", user.id)
         .maybeSingle();
       setAssinatura(data as Assinatura | null);
-      lastFetchRef.current = Date.now();
-      if (!silent) setLoading(false);
+      hasLoadedOnceRef.current = true;
+      setLoading(false);
     },
     [user],
   );

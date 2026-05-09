@@ -13,6 +13,7 @@ import { Route as SucessoRouteImport } from './routes/sucesso'
 import { Route as ReceitasRouteImport } from './routes/receitas'
 import { Route as ProdutosRouteImport } from './routes/produtos'
 import { Route as MateriasPrimasRouteImport } from './routes/materias-primas'
+import { Route as MateriasRouteImport } from './routes/materias'
 import { Route as KitsRouteImport } from './routes/kits'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as CanceladoRouteImport } from './routes/cancelado'
@@ -38,6 +39,11 @@ const ProdutosRoute = ProdutosRouteImport.update({
 const MateriasPrimasRoute = MateriasPrimasRouteImport.update({
   id: '/materias-primas',
   path: '/materias-primas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MateriasRoute = MateriasRouteImport.update({
+  id: '/materias',
+  path: '/materias',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KitsRoute = KitsRouteImport.update({
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/cancelado': typeof CanceladoRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/kits': typeof KitsRoute
+  '/materias': typeof MateriasRoute
   '/materias-primas': typeof MateriasPrimasRoute
   '/produtos': typeof ProdutosRoute
   '/receitas': typeof ReceitasRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/cancelado': typeof CanceladoRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/kits': typeof KitsRoute
+  '/materias': typeof MateriasRoute
   '/materias-primas': typeof MateriasPrimasRoute
   '/produtos': typeof ProdutosRoute
   '/receitas': typeof ReceitasRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/cancelado': typeof CanceladoRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/kits': typeof KitsRoute
+  '/materias': typeof MateriasRoute
   '/materias-primas': typeof MateriasPrimasRoute
   '/produtos': typeof ProdutosRoute
   '/receitas': typeof ReceitasRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/cancelado'
     | '/configuracoes'
     | '/kits'
+    | '/materias'
     | '/materias-primas'
     | '/produtos'
     | '/receitas'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/cancelado'
     | '/configuracoes'
     | '/kits'
+    | '/materias'
     | '/materias-primas'
     | '/produtos'
     | '/receitas'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/cancelado'
     | '/configuracoes'
     | '/kits'
+    | '/materias'
     | '/materias-primas'
     | '/produtos'
     | '/receitas'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   CanceladoRoute: typeof CanceladoRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   KitsRoute: typeof KitsRoute
+  MateriasRoute: typeof MateriasRoute
   MateriasPrimasRoute: typeof MateriasPrimasRoute
   ProdutosRoute: typeof ProdutosRoute
   ReceitasRoute: typeof ReceitasRoute
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/materias-primas'
       fullPath: '/materias-primas'
       preLoaderRoute: typeof MateriasPrimasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/materias': {
+      id: '/materias'
+      path: '/materias'
+      fullPath: '/materias'
+      preLoaderRoute: typeof MateriasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kits': {
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   CanceladoRoute: CanceladoRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
   KitsRoute: KitsRoute,
+  MateriasRoute: MateriasRoute,
   MateriasPrimasRoute: MateriasPrimasRoute,
   ProdutosRoute: ProdutosRoute,
   ReceitasRoute: ReceitasRoute,
@@ -250,3 +271,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
