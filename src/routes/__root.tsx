@@ -1,6 +1,7 @@
 import { Outlet, Link, createRootRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import { AccessGate } from "@/components/AccessGate";
 
@@ -35,12 +36,12 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   return (
-    <>
+    <TooltipProvider delayDuration={150}>
       <AuthProvider>
         <AuthGate />
       </AuthProvider>
       <Toaster position="top-center" richColors />
-    </>
+    </TooltipProvider>
   );
 }
 

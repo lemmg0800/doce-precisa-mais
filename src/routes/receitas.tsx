@@ -17,6 +17,7 @@ import {
 import { brl } from "@/lib/format";
 import { unidadeLabel } from "@/lib/units";
 import { ReceitaFormDialog } from "@/components/ReceitaFormDialog";
+import { TruncatedTitle } from "@/components/TruncatedTitle";
 import type { Receita } from "@/store/types";
 import { toast } from "sonner";
 
@@ -91,8 +92,8 @@ function ReceitasPage() {
                       <div className="h-9 w-9 rounded-lg bg-accent/30 grid place-items-center shrink-0">
                         <BookOpen className="h-4 w-4 text-primary" />
                       </div>
-                      <CardTitle className="font-display text-xl truncate">
-                        {r.nome_receita}
+                      <CardTitle className="font-display text-xl min-w-0 flex-1">
+                        <TruncatedTitle text={r.nome_receita} />
                       </CardTitle>
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -131,8 +132,15 @@ function ReceitasPage() {
                       <Button
                         variant="ghost" size="sm"
                         onClick={async () => {
-                          await duplicateReceita(r.id);
+                          const newId = await duplicateReceita(r.id);
                           toast.success("Receita duplicada.");
+                          if (newId) {
+                            const novo = usePricingStore.getState().receitas.find((x) => x.id === newId);
+                            if (novo) {
+                              setEditing(novo);
+                              setOpen(true);
+                            }
+                          }
                         }}
                       >
                         <Copy className="h-3.5 w-3.5" />
