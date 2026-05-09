@@ -16,6 +16,7 @@ import { usePricingStore, calcularProduto, custoUnitarioReceita, useConfigEfetiv
 import { brl, pct } from "@/lib/format";
 import { ProdutoFormDialog } from "@/components/ProdutoFormDialog";
 import { CategoriasManagerDialog } from "@/components/CategoriasManagerDialog";
+import { TruncatedTitle } from "@/components/TruncatedTitle";
 import type { Produto, CategoriaProduto } from "@/store/types";
 import { toast } from "sonner";
 
@@ -170,8 +171,8 @@ function ProdutosPage() {
                               <div className="h-9 w-9 rounded-lg bg-accent/30 grid place-items-center shrink-0">
                                 <ChefHat className="h-4 w-4 text-primary" />
                               </div>
-                              <CardTitle className="font-display text-xl truncate">
-                                {p.nome_produto}
+                              <CardTitle className="font-display text-xl min-w-0 flex-1">
+                                <TruncatedTitle text={p.nome_produto} />
                               </CardTitle>
                             </div>
                           </div>
@@ -264,8 +265,15 @@ function ProdutosPage() {
                               variant="ghost"
                               size="sm"
                               onClick={async () => {
-                                await duplicateProduto(p.id);
+                                const newId = await duplicateProduto(p.id);
                                 toast.success("Produto duplicado.");
+                                if (newId) {
+                                  const novo = usePricingStore.getState().produtos.find((x) => x.id === newId);
+                                  if (novo) {
+                                    setEditing(novo);
+                                    setOpen(true);
+                                  }
+                                }
                               }}
                             >
                               <Copy className="h-3.5 w-3.5" />

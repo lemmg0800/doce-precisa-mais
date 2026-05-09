@@ -13,6 +13,7 @@ import { usePricingStore, custoTotalKit } from "@/store/usePricingStore";
 import { brl } from "@/lib/format";
 import { unidadeLabel } from "@/lib/units";
 import { KitFormDialog } from "@/components/KitFormDialog";
+import { TruncatedTitle } from "@/components/TruncatedTitle";
 import type { KitEmbalagem } from "@/store/types";
 import { toast } from "sonner";
 
@@ -86,7 +87,7 @@ function KitsPage() {
                       <div className="h-9 w-9 rounded-lg bg-accent/30 grid place-items-center shrink-0">
                         <Box className="h-4 w-4 text-primary" />
                       </div>
-                      <CardTitle className="font-display text-xl truncate">{k.nome_kit}</CardTitle>
+                      <CardTitle className="font-display text-xl min-w-0 flex-1"><TruncatedTitle text={k.nome_kit} /></CardTitle>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {k.itens.length} item(s)
@@ -125,8 +126,15 @@ function KitsPage() {
                       <Button
                         variant="ghost" size="sm"
                         onClick={async () => {
-                          await duplicateKit(k.id);
+                          const newId = await duplicateKit(k.id);
                           toast.success("Kit duplicado.");
+                          if (newId) {
+                            const novo = usePricingStore.getState().kits.find((x) => x.id === newId);
+                            if (novo) {
+                              setEditing(novo);
+                              setOpen(true);
+                            }
+                          }
                         }}
                       >
                         <Copy className="h-3.5 w-3.5" />
