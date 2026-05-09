@@ -11,6 +11,7 @@ import {
 import { Plus, Pencil, Trash2, Copy, Search, Box } from "lucide-react";
 import { usePricingStore, custoTotalKit } from "@/store/usePricingStore";
 import { brl } from "@/lib/format";
+import { matchesSearch } from "@/lib/search";
 import { unidadeLabel } from "@/lib/units";
 import { KitFormDialog } from "@/components/KitFormDialog";
 import { TruncatedTitle } from "@/components/TruncatedTitle";
