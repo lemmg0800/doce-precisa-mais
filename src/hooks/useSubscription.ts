@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -25,11 +24,11 @@ function diffDays(target: Date) {
   return Math.ceil((target.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
-const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+// Long silent interval — does NOT reset UI / forms.
+const REFRESH_INTERVAL_MS = 15 * 60 * 1000;
 
 export function useSubscription(): AccessInfo {
   const { user, ready } = useAuth();
-  const location = useLocation();
   const [assinatura, setAssinatura] = useState<Assinatura | null>(null);
   const [loading, setLoading] = useState(true);
   const lastFetchRef = useRef<number>(0);
@@ -60,14 +59,7 @@ export function useSubscription(): AccessInfo {
     load(false);
   }, [ready, load]);
 
-  // Silent refresh on route change (only if stale > 30s)
-  useEffect(() => {
-    if (!ready || !user) return;
-    if (Date.now() - lastFetchRef.current < 30_000) return;
-    load(true);
-  }, [location.pathname, ready, user, load]);
-
-  // Silent background refresh
+  // Silent background refresh every 15 min — no UI reset, no remount.
   useEffect(() => {
     if (!ready || !user) return;
     const id = setInterval(() => load(true), REFRESH_INTERVAL_MS);
