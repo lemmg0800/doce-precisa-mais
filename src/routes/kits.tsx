@@ -37,7 +37,7 @@ function KitsPage() {
   const list = useMemo(
     () =>
       kits
-        .filter((k) => k.nome_kit.toLowerCase().includes(q.toLowerCase()))
+        .filter((k) => matchesSearch(k.nome_kit, q))
         .sort((a, b) => a.nome_kit.localeCompare(b.nome_kit)),
     [kits, q],
   );
