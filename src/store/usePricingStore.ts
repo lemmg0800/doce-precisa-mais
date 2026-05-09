@@ -464,8 +464,8 @@ export const usePricingStore = create<State>()((set, get) => ({
       if (e2) throw e2;
     }
     await get().loadAll();
+    return data.id as string;
   },
-  updateReceita: async (id, r) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = supabase as any;
     const { error } = await sb
@@ -498,8 +498,8 @@ export const usePricingStore = create<State>()((set, get) => ({
   },
   duplicateReceita: async (id) => {
     const orig = get().receitas.find((r) => r.id === id);
-    if (!orig) return;
-    await get().addReceita({
+    if (!orig) return undefined;
+    return await get().addReceita({
       nome_receita: `${orig.nome_receita} (cópia)`,
       rendimento: orig.rendimento,
       unidade_rendimento: orig.unidade_rendimento,
