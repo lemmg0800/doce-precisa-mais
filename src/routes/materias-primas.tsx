@@ -42,7 +42,7 @@ function MateriasPage() {
   const filtered = useMemo(
     () =>
       materias
-        .filter((m) => m.nome.toLowerCase().includes(q.toLowerCase()))
+        .filter((m) => matchesSearch(m.nome, q))
         .sort((a, b) => a.nome.localeCompare(b.nome)),
     [materias, q],
   );
