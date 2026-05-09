@@ -41,7 +41,7 @@ function ReceitasPage() {
   const list = useMemo(
     () =>
       receitas
-        .filter((r) => r.nome_receita.toLowerCase().includes(q.toLowerCase()))
+        .filter((r) => matchesSearch(r.nome_receita, q))
         .sort((a, b) => a.nome_receita.localeCompare(b.nome_receita)),
     [receitas, q],
   );
