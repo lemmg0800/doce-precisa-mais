@@ -14,6 +14,7 @@ import {
 import { Plus, Pencil, Trash2, Copy, Search, ChefHat, Settings2, BookOpen } from "lucide-react";
 import { usePricingStore, calcularProduto, custoUnitarioReceita, useConfigEfetiva } from "@/store/usePricingStore";
 import { brl, pct } from "@/lib/format";
+import { matchesSearch } from "@/lib/search";
 import { ProdutoFormDialog } from "@/components/ProdutoFormDialog";
 import { CategoriasManagerDialog } from "@/components/CategoriasManagerDialog";
 import { TruncatedTitle } from "@/components/TruncatedTitle";
@@ -44,7 +45,7 @@ function ProdutosPage() {
 
   const grupos = useMemo(() => {
     const filtered = produtos
-      .filter((p) => p.nome_produto.toLowerCase().includes(q.toLowerCase()))
+      .filter((p) => matchesSearch(p.nome_produto, q))
       .map((p) => ({ p, calc: calcularProduto(p, materias, config, kits, receitas) }))
       .sort((a, b) => a.p.nome_produto.localeCompare(b.p.nome_produto));
 

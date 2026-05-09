@@ -11,6 +11,7 @@ import {
 import { Plus, Pencil, Trash2, Copy, Search, Box } from "lucide-react";
 import { usePricingStore, custoTotalKit } from "@/store/usePricingStore";
 import { brl } from "@/lib/format";
+import { matchesSearch } from "@/lib/search";
 import { unidadeLabel } from "@/lib/units";
 import { KitFormDialog } from "@/components/KitFormDialog";
 import { TruncatedTitle } from "@/components/TruncatedTitle";
@@ -36,7 +37,7 @@ function KitsPage() {
   const list = useMemo(
     () =>
       kits
-        .filter((k) => k.nome_kit.toLowerCase().includes(q.toLowerCase()))
+        .filter((k) => matchesSearch(k.nome_kit, q))
         .sort((a, b) => a.nome_kit.localeCompare(b.nome_kit)),
     [kits, q],
   );
