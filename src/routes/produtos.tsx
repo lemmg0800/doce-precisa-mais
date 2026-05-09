@@ -44,7 +44,7 @@ function ProdutosPage() {
 
   const grupos = useMemo(() => {
     const filtered = produtos
-      .filter((p) => p.nome_produto.toLowerCase().includes(q.toLowerCase()))
+      .filter((p) => matchesSearch(p.nome_produto, q))
       .map((p) => ({ p, calc: calcularProduto(p, materias, config, kits, receitas) }))
       .sort((a, b) => a.p.nome_produto.localeCompare(b.p.nome_produto));
 
