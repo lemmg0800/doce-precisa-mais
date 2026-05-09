@@ -1,107 +1,83 @@
-# Além das correções já planejadas, revisar todo o projeto para garantir que nenhum código browser-only execute durante SSR/publicação.
+## Causa raiz confirmada
 
-Verificar especialmente:
+Logs do ambiente publicado (timestamp 21:44Z, após o último deploy):
 
-- localStorage
-- sessionStorage
-- window
-- document
-- navigator
-- Stripe browser SDK
-- listeners globais
-
-Garantir que:
-
-- qualquer acesso browser-only ocorra apenas dentro de:
-  - useEffect
-  - handlers
-  - eventos do cliente
-
-Nunca em:
-
-- topo de módulo
-- providers globais
-- imports
-- inicializações automáticas
-
----
-
-Verificar também:
-
-- guards de autenticação
-- providers de assinatura
-- providers de sessão
-- listeners de foco/visibilitychange
-
-para impedir re-renderizações globais e crashes silenciosos no ambiente publicado.
-
----
-
-Objetivo:
-
-- eliminar definitivamente o Internal server error
-- garantir compatibilidade total com SSR/publicação do Lovable
-- manter preview e produção funcionando igualmente  
-  
-Plano para corrigir o “Internal server error” no site publicado
-
-## O que vou corrigir
-
-1. Remover do bundle do servidor os módulos que hoje são carregados globalmente e são fortes candidatos ao crash em produção.
-2. Tornar esses trechos estritamente client-only, sem alterar o fluxo funcional da aplicação.
-3. Validar o preview e deixar o projeto pronto para você publicar novamente.
-
-## Causa mais provável encontrada
-
-Há dois pontos de risco claros para SSR/publicação:
-
-- `src/components/MateriaImportDialog.tsx` importa `xlsx` no topo do arquivo, e esse componente é importado por `src/routes/materias-primas.tsx`. Como o roteador gera um bundle global de rotas, um módulo pesado/incompatível pode derrubar o SSR inteiro no ambiente publicado.
-- `src/integrations/lovable/index.ts` cria `createLovableAuth()` em nível de módulo. Como `src/routes/auth.tsx` entra no grafo de rotas, isso também pode acabar sendo avaliado cedo demais no servidor.
-
-O preview local pode continuar funcionando enquanto a publicação quebra, porque o runtime publicado é mais restrito.
-
-## Implementação
-
-### 1) Isolar a importação de planilhas
-
-- Tirar `xlsx` do import estático em `MateriaImportDialog`.
-- Carregar `xlsx` somente dentro das ações do navegador (download do modelo e leitura do arquivo), via import dinâmico.
-- Manter exatamente a mesma UX da importação.
-
-### 2) Isolar a autenticação OAuth para o cliente
-
-- Remover a criação imediata de `createLovableAuth()` em nível de módulo.
-- Passar a instanciar o helper de OAuth apenas quando o usuário clicar para entrar com Google.
-- Preservar login normal com e-mail/senha e o fluxo OAuth atual.
-
-### 3) Endurecer o código para SSR
-
-- Garantir que nenhum acesso de browser-only rode durante carregamento de módulo.
-- Limitar `window.location`, redirecionamentos e integrações de browser a handlers/eventos do cliente.
-
-### 4) Validar antes de encerrar
-
-- Conferir se o preview continua renderizando normalmente.
-- Verificar se a estrutura continua pronta para publicação.
-- Te orientar a clicar em **Update** no publish, porque mudanças de frontend só entram no ar depois disso.
-
-## Resultado esperado
-
-- O site publicado deixa de mostrar “Internal server error”.
-- A aplicação volta a abrir em `/` e nas rotas internas.
-- Importação de planilha e login com Google continuam funcionando, mas sem quebrar a publicação.
-
-## Detalhes técnicos
-
-```text
-routeTree -> importa todas as rotas
-  /materias-primas -> importa MateriaImportDialog -> import estático de xlsx
-  /auth -> importa lovable auth helper -> criação em nível de módulo
-
-No runtime publicado, qualquer módulo incompatível no grafo SSR pode derrubar
-não só a rota afetada, mas toda a renderização do app.
+```
+[error] Error: No such module "h3-v2". imported from "server.js"
+  at async serveSSR (index.js:15523:22)
+GET https://alquimista-precifica.lovable.app/ → 502
 ```
 
-## Depois da correção
+O `src/server.ts` atual faz `import handler from "@tanstack/react-start/server-entry"` de forma **estática**. Quando o Cloudflare Worker bundla esse arquivo, o handler interno do TanStack acaba referenciando o módulo virtual `h3-v2` em runtime — que não existe no Worker. Resultado: o módulo falha em **import-time**, antes do `fetch` ser chamado, e nenhum try/catch ajuda. Toda requisição retorna 502.
 
-Assim que eu aplicar, teste no preview e depois publique de novo com **Update** para o novo bundle entrar no ar.
+Esse é exatamente o cenário documentado no guia oficial "TanStack Start SSR error handling": o wrapper precisa usar **import dinâmico (lazy)** + **try/catch** + **normalização de Response** + **captura global de erros**, e o `vite.config.ts` precisa apontar `tanstackStart.server.entry` para esse wrapper (já está OK).
+
+## Correções
+
+### 1. Reescrever `src/server.ts` com lazy import e tratamento completo
+
+```ts
+import "./lib/error-capture";
+import { renderErrorPage } from "./lib/error-page";
+import { consumeLastCapturedError } from "./lib/error-capture";
+
+type ServerEntry = {
+  fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
+};
+
+let serverEntryPromise: Promise<ServerEntry> | undefined;
+async function getServerEntry(): Promise<ServerEntry> {
+  if (!serverEntryPromise) {
+    serverEntryPromise = import("@tanstack/react-start/server-entry")
+      .then((m) => (m.default ?? m) as ServerEntry);
+  }
+  return serverEntryPromise;
+}
+
+async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
+  if (response.status < 500) return response;
+  const ct = response.headers.get("content-type") ?? "";
+  if (!ct.includes("application/json")) return response;
+  const body = await response.clone().text();
+  if (!body.includes('"unhandled":true') || !body.includes('"message":"HTTPError"')) return response;
+  console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
+  return new Response(renderErrorPage(), {
+    status: 500,
+    headers: { "content-type": "text/html; charset=utf-8" },
+  });
+}
+
+export default {
+  async fetch(request: Request, env: unknown, ctx: unknown) {
+    try {
+      const handler = await getServerEntry();
+      const response = await handler.fetch(request, env, ctx);
+      return await normalizeCatastrophicSsrResponse(response);
+    } catch (error) {
+      console.error(error);
+      return new Response(renderErrorPage(), {
+        status: 500,
+        headers: { "content-type": "text/html; charset=utf-8" },
+      });
+    }
+  },
+};
+```
+
+### 2. Criar `src/lib/error-capture.ts`
+
+Listeners globais de `error` e `unhandledrejection` que armazenam o último erro por 5s, para correlacionar quando o h3 engole a exceção.
+
+### 3. Criar `src/lib/error-page.ts`
+
+HTML autocontido (sem imports do app) com mensagem amigável e botões "Tentar novamente" / "Ir para início".
+
+### 4. Verificações
+
+- Confirmar que `vite.config.ts` continua com `tanstackStart.server.entry: "server"` (já está).
+- Confirmar que `wrangler.jsonc` aponta `main: "src/server.ts"` (já está).
+- Após o deploy, chamar `/` via invoke-server-function e checar logs publicados — esperado: HTTP 200, sem erro `h3-v2`.
+
+## Após implementar
+
+Você precisa clicar em **Update** no menu **Publish** para publicar a nova versão. Depois disso eu valido com os logs reais que o 502 desapareceu.
