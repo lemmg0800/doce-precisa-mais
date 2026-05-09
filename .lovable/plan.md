@@ -1,59 +1,107 @@
-## Diagnóstico
+# Além das correções já planejadas, revisar todo o projeto para garantir que nenhum código browser-only execute durante SSR/publicação.
 
-O site publicado retorna **502 Internal Server Error** em todas as rotas. Os logs do Worker mostram:
+Verificar especialmente:
 
-```
-Error: No such module "h3-v2". imported from "server.js"
-```
+- localStorage
+- sessionStorage
+- window
+- document
+- navigator
+- Stripe browser SDK
+- listeners globais
 
-O problema foi introduzido na última alteração do `vite.config.ts`, onde o plugin `tanstackStart` foi configurado com overrides de `srcDirectory` e `router.entry: "./router.tsx"`. Isso desviou o build do server-entry padrão (`@tanstack/react-start/server-entry`) que o `wrangler.jsonc` espera carregar — resultando em um bundle Worker quebrado, sem o módulo `h3-v2` que o framework usa internamente.
+Garantir que:
 
-Em `vite dev` o servidor funciona porque o Vite resolve os módulos em runtime; em produção o Cloudflare Worker exige tudo bundleado corretamente.
+- qualquer acesso browser-only ocorra apenas dentro de:
+  - useEffect
+  - handlers
+  - eventos do cliente
 
-## Plano de correção
+Nunca em:
 
-### 1. Restaurar o `vite.config.ts` para a forma padrão do TanStack Start
+- topo de módulo
+- providers globais
+- imports
+- inicializações automáticas
 
-Remover os overrides que quebram o bundle do Worker. Usar apenas o plugin com defaults (que geram o server-entry corretamente):
+---
 
-```ts
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import tsconfigPaths from "vite-tsconfig-paths";
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+Verificar também:
 
-export default defineConfig({
-  plugins: [
-    tanstackStart(),
-    react(),
-    tailwindcss(),
-    tsconfigPaths(),
-  ],
-  server: { host: true, port: 3000, strictPort: false },
-});
-```
+- guards de autenticação
+- providers de assinatura
+- providers de sessão
+- listeners de foco/visibilitychange
 
-### 2. Garantir que `src/router.tsx` continua exportando `getRouter`
+para impedir re-renderizações globais e crashes silenciosos no ambiente publicado.
 
-Já está correto. O TanStack Start, com defaults, descobre `src/router.tsx` automaticamente.
+---
 
-### 3. Manter `import "./styles.css"` em `src/router.tsx`
+Objetivo:
 
-Já adicionado na correção anterior — preserva o Tailwind tanto em SSR quanto no preview.
+- eliminar definitivamente o Internal server error
+- garantir compatibilidade total com SSR/publicação do Lovable
+- manter preview e produção funcionando igualmente  
+  
+Plano para corrigir o “Internal server error” no site publicado
 
-### 4. Manter `public/_redirects`
+## O que vou corrigir
 
-Não atrapalha; serve como fallback adicional.
+1. Remover do bundle do servidor os módulos que hoje são carregados globalmente e são fortes candidatos ao crash em produção.
+2. Tornar esses trechos estritamente client-only, sem alterar o fluxo funcional da aplicação.
+3. Validar o preview e deixar o projeto pronto para você publicar novamente.
+
+## Causa mais provável encontrada
+
+Há dois pontos de risco claros para SSR/publicação:
+
+- `src/components/MateriaImportDialog.tsx` importa `xlsx` no topo do arquivo, e esse componente é importado por `src/routes/materias-primas.tsx`. Como o roteador gera um bundle global de rotas, um módulo pesado/incompatível pode derrubar o SSR inteiro no ambiente publicado.
+- `src/integrations/lovable/index.ts` cria `createLovableAuth()` em nível de módulo. Como `src/routes/auth.tsx` entra no grafo de rotas, isso também pode acabar sendo avaliado cedo demais no servidor.
+
+O preview local pode continuar funcionando enquanto a publicação quebra, porque o runtime publicado é mais restrito.
+
+## Implementação
+
+### 1) Isolar a importação de planilhas
+
+- Tirar `xlsx` do import estático em `MateriaImportDialog`.
+- Carregar `xlsx` somente dentro das ações do navegador (download do modelo e leitura do arquivo), via import dinâmico.
+- Manter exatamente a mesma UX da importação.
+
+### 2) Isolar a autenticação OAuth para o cliente
+
+- Remover a criação imediata de `createLovableAuth()` em nível de módulo.
+- Passar a instanciar o helper de OAuth apenas quando o usuário clicar para entrar com Google.
+- Preservar login normal com e-mail/senha e o fluxo OAuth atual.
+
+### 3) Endurecer o código para SSR
+
+- Garantir que nenhum acesso de browser-only rode durante carregamento de módulo.
+- Limitar `window.location`, redirecionamentos e integrações de browser a handlers/eventos do cliente.
+
+### 4) Validar antes de encerrar
+
+- Conferir se o preview continua renderizando normalmente.
+- Verificar se a estrutura continua pronta para publicação.
+- Te orientar a clicar em **Update** no publish, porque mudanças de frontend só entram no ar depois disso.
 
 ## Resultado esperado
 
-- Build de produção volta a gerar o Worker corretamente, com `h3-v2` resolvido.
-- `https://alquimista-precifica.lovable.app/` e todas as sub-rotas (`/produtos`, `/receitas`, `/kits`, `/materias-primas`, `/ajustes`) carregam normalmente.
-- F5 em qualquer rota funciona no site publicado.
-- Preview continua com cores/Tailwind aplicados.
+- O site publicado deixa de mostrar “Internal server error”.
+- A aplicação volta a abrir em `/` e nas rotas internas.
+- Importação de planilha e login com Google continuam funcionando, mas sem quebrar a publicação.
 
-## Observações
+## Detalhes técnicos
 
-- Após aplicar a correção, será necessário clicar em **Update** no menu **Publish** novamente para o build novo ir ao ar.
-- Nenhuma mudança em rotas, autenticação ou lógica de assinatura — apenas configuração de build.
+```text
+routeTree -> importa todas as rotas
+  /materias-primas -> importa MateriaImportDialog -> import estático de xlsx
+  /auth -> importa lovable auth helper -> criação em nível de módulo
+
+No runtime publicado, qualquer módulo incompatível no grafo SSR pode derrubar
+não só a rota afetada, mas toda a renderização do app.
+```
+
+## Depois da correção
+
+Assim que eu aplicar, teste no preview e depois publique de novo com **Update** para o novo bundle entrar no ar.
