@@ -6,15 +6,7 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 
 export default defineConfig({
   plugins: [
-    tanstackStart({
-      srcDirectory: "src",
-      router: {
-        entry: "./router.tsx",
-        routesDirectory: "routes",
-        generatedRouteTree: "routeTree.gen.ts",
-        basepath: "/",
-      },
-    }),
+    tanstackStart(),
     react(),
     tailwindcss(),
     tsconfigPaths(),
@@ -23,8 +15,5 @@ export default defineConfig({
     host: true,
     port: 3000,
     strictPort: false,
-  },
-  optimizeDeps: {
-    include: ["react", "react-dom", "@tanstack/react-router"],
   },
 });
