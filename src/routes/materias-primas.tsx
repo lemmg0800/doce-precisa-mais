@@ -18,7 +18,6 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Search, Upload, ChefHat, Box, Layers } from "lucide-react";
 import { usePricingStore, custoUnitarioBase } from "@/store/usePricingStore";
 import { brl } from "@/lib/format";
-import { matchesSearch } from "@/lib/search";
 import { unidadeLabel } from "@/lib/units";
 import { MateriaFormDialog } from "@/components/MateriaFormDialog";
 import { MateriaImportDialog } from "@/components/MateriaImportDialog";
@@ -42,7 +41,7 @@ function MateriasPage() {
   const filtered = useMemo(
     () =>
       materias
-        .filter((m) => matchesSearch(m.nome, q))
+        .filter((m) => m.nome.toLowerCase().includes(q.toLowerCase()))
         .sort((a, b) => a.nome.localeCompare(b.nome)),
     [materias, q],
   );

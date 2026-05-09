@@ -42,22 +42,22 @@ interface State {
   deleteMateria: (id: string) => Promise<void>;
 
   // kits
-  addKit: (k: Omit<KitEmbalagem, "id" | "itens"> & { itens: Omit<KitItem, "id">[] }) => Promise<string>;
+  addKit: (k: Omit<KitEmbalagem, "id" | "itens"> & { itens: Omit<KitItem, "id">[] }) => Promise<void>;
   updateKit: (id: string, k: Omit<KitEmbalagem, "id" | "itens"> & { itens: Omit<KitItem, "id">[] }) => Promise<void>;
   deleteKit: (id: string) => Promise<void>;
-  duplicateKit: (id: string) => Promise<string | undefined>;
+  duplicateKit: (id: string) => Promise<void>;
 
   // receitas
-  addReceita: (r: Omit<Receita, "id" | "itens"> & { itens: Omit<ReceitaItem, "id">[] }) => Promise<string>;
+  addReceita: (r: Omit<Receita, "id" | "itens"> & { itens: Omit<ReceitaItem, "id">[] }) => Promise<void>;
   updateReceita: (id: string, r: Omit<Receita, "id" | "itens"> & { itens: Omit<ReceitaItem, "id">[] }) => Promise<void>;
   deleteReceita: (id: string) => Promise<void>;
-  duplicateReceita: (id: string) => Promise<string | undefined>;
+  duplicateReceita: (id: string) => Promise<void>;
 
   // produtos
-  addProduto: (p: Omit<Produto, "id" | "itens" | "receitas"> & { itens: Omit<ItemReceita, "id">[]; receitas?: Omit<ProdutoReceita, "id">[] }) => Promise<string>;
+  addProduto: (p: Omit<Produto, "id" | "itens" | "receitas"> & { itens: Omit<ItemReceita, "id">[]; receitas?: Omit<ProdutoReceita, "id">[] }) => Promise<void>;
   updateProduto: (id: string, p: Omit<Produto, "id" | "itens" | "receitas"> & { itens: Omit<ItemReceita, "id">[]; receitas?: Omit<ProdutoReceita, "id">[] }) => Promise<void>;
   deleteProduto: (id: string) => Promise<void>;
-  duplicateProduto: (id: string) => Promise<string | undefined>;
+  duplicateProduto: (id: string) => Promise<void>;
 
   // categorias
   addCategoria: (c: Omit<CategoriaProduto, "id" | "is_default" | "ordem_exibicao"> & { ordem_exibicao?: number }) => Promise<CategoriaProduto>;
@@ -309,7 +309,6 @@ export const usePricingStore = create<State>()((set, get) => ({
       if (e2) throw e2;
     }
     await get().loadAll();
-    return data.id as string;
   },
   updateKit: async (id, k) => {
     const { error } = await supabase.from("kits_embalagem").update({ nome_kit: k.nome_kit }).eq("id", id);
@@ -332,8 +331,8 @@ export const usePricingStore = create<State>()((set, get) => ({
   },
   duplicateKit: async (id) => {
     const orig = get().kits.find((k) => k.id === id);
-    if (!orig) return undefined;
-    return await get().addKit({
+    if (!orig) return;
+    await get().addKit({
       nome_kit: `${orig.nome_kit} (cópia)`,
       itens: orig.itens.map((i) => ({
         materia_prima_id: i.materia_prima_id,
@@ -379,7 +378,6 @@ export const usePricingStore = create<State>()((set, get) => ({
       if (e3) throw e3;
     }
     await get().loadAll();
-    return data.id as string;
   },
   updateProduto: async (id, p) => {
     const { error } = await supabase
@@ -420,8 +418,8 @@ export const usePricingStore = create<State>()((set, get) => ({
   },
   duplicateProduto: async (id) => {
     const orig = get().produtos.find((p) => p.id === id);
-    if (!orig) return undefined;
-    return await get().addProduto({
+    if (!orig) return;
+    await get().addProduto({
       nome_produto: `${orig.nome_produto} (cópia)`,
       rendimento: orig.rendimento,
       percentual_perda: orig.percentual_perda,
@@ -464,7 +462,6 @@ export const usePricingStore = create<State>()((set, get) => ({
       if (e2) throw e2;
     }
     await get().loadAll();
-    return data.id as string;
   },
   updateReceita: async (id, r) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -499,8 +496,8 @@ export const usePricingStore = create<State>()((set, get) => ({
   },
   duplicateReceita: async (id) => {
     const orig = get().receitas.find((r) => r.id === id);
-    if (!orig) return undefined;
-    return await get().addReceita({
+    if (!orig) return;
+    await get().addReceita({
       nome_receita: `${orig.nome_receita} (cópia)`,
       rendimento: orig.rendimento,
       unidade_rendimento: orig.unidade_rendimento,

@@ -14,10 +14,8 @@ import {
 import { Plus, Pencil, Trash2, Copy, Search, ChefHat, Settings2, BookOpen } from "lucide-react";
 import { usePricingStore, calcularProduto, custoUnitarioReceita, useConfigEfetiva } from "@/store/usePricingStore";
 import { brl, pct } from "@/lib/format";
-import { matchesSearch } from "@/lib/search";
 import { ProdutoFormDialog } from "@/components/ProdutoFormDialog";
 import { CategoriasManagerDialog } from "@/components/CategoriasManagerDialog";
-import { TruncatedTitle } from "@/components/TruncatedTitle";
 import type { Produto, CategoriaProduto } from "@/store/types";
 import { toast } from "sonner";
 
@@ -45,7 +43,7 @@ function ProdutosPage() {
 
   const grupos = useMemo(() => {
     const filtered = produtos
-      .filter((p) => matchesSearch(p.nome_produto, q))
+      .filter((p) => p.nome_produto.toLowerCase().includes(q.toLowerCase()))
       .map((p) => ({ p, calc: calcularProduto(p, materias, config, kits, receitas) }))
       .sort((a, b) => a.p.nome_produto.localeCompare(b.p.nome_produto));
 
@@ -172,8 +170,8 @@ function ProdutosPage() {
                               <div className="h-9 w-9 rounded-lg bg-accent/30 grid place-items-center shrink-0">
                                 <ChefHat className="h-4 w-4 text-primary" />
                               </div>
-                              <CardTitle className="font-display text-xl min-w-0 flex-1">
-                                <TruncatedTitle text={p.nome_produto} />
+                              <CardTitle className="font-display text-xl truncate">
+                                {p.nome_produto}
                               </CardTitle>
                             </div>
                           </div>
@@ -266,15 +264,8 @@ function ProdutosPage() {
                               variant="ghost"
                               size="sm"
                               onClick={async () => {
-                                const newId = await duplicateProduto(p.id);
+                                await duplicateProduto(p.id);
                                 toast.success("Produto duplicado.");
-                                if (newId) {
-                                  const novo = usePricingStore.getState().produtos.find((x) => x.id === newId);
-                                  if (novo) {
-                                    setEditing(novo);
-                                    setOpen(true);
-                                  }
-                                }
                               }}
                             >
                               <Copy className="h-3.5 w-3.5" />

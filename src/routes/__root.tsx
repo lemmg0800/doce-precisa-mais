@@ -1,16 +1,6 @@
-import type { ReactNode } from "react";
-import {
-  Outlet,
-  Link,
-  Scripts,
-  HeadContent,
-  createRootRoute,
-  useLocation,
-  useNavigate,
-} from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import { AccessGate } from "@/components/AccessGate";
 
@@ -39,41 +29,18 @@ function NotFoundComponent() {
 }
 
 export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Preciflow — Precificação artesanal" },
-      { name: "description", content: "Calcule custos e preços das receitas em tempo real" },
-    ],
-  }),
-  shellComponent: RootDocument,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
 });
 
-function RootDocument({ children }: { children: ReactNode }) {
-  return (
-    <html lang="pt-BR">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
 function RootComponent() {
   return (
-    <TooltipProvider delayDuration={150}>
+    <>
       <AuthProvider>
         <AuthGate />
       </AuthProvider>
       <Toaster position="top-center" richColors />
-    </TooltipProvider>
+    </>
   );
 }
 

@@ -73,7 +73,7 @@ function AssinaturaPage() {
     setLoading(plano);
     try {
       const { data, error } = await supabase.functions.invoke("criar-checkout", {
-        body: { plano },
+        body: { user_id: user.id, email: user.email, plano },
       });
       if (error) throw error;
       if (!data?.url) throw new Error("URL de checkout não retornada");

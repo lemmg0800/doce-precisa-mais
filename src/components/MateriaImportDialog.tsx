@@ -1,4 +1,5 @@
 import { useState } from "react";
+import * as XLSX from "xlsx";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -55,8 +56,7 @@ const COLUNAS_OBRIGATORIAS = [
   "categoria",
 ] as const;
 
-async function downloadModelo() {
-  const XLSX = await import("xlsx");
+function downloadModelo() {
   const wb = XLSX.utils.book_new();
 
   // Aba de dados
@@ -160,7 +160,6 @@ export function MateriaImportDialog({ open, onOpenChange }: Props) {
     setParsing(true);
     try {
       const buf = await file.arrayBuffer();
-      const XLSX = await import("xlsx");
       const wb = XLSX.read(buf, { type: "array" });
       // pega primeira aba (ou a chamada materias_primas se existir)
       const sheetName =
