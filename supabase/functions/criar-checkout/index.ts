@@ -1,5 +1,6 @@
 // @ts-nocheck
 import Stripe from "https://esm.sh/stripe@17.5.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const PRICE_MAP: Record<string, string> = {
   mensal: "price_1TTU5ZIxq4nJu67Txt8mETbA",
@@ -17,9 +18,36 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { user_id, email, plano } = await req.json();
+    // Verify the caller's JWT and derive user identity from the token,
+    // never from the request body.
+    const authHeader = req.headers.get("Authorization") || "";
+    const jwt = authHeader.replace("Bearer ", "").trim();
+    if (!jwt) {
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+    );
+    const { data: userData, error: userErr } = await supabase.auth.getUser(jwt);
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const user = userData.user;
+    const user_id = user.id;
+    const email = user.email;
+
+    const { plano } = await req.json();
     const priceId = PRICE_MAP[plano];
-    if (!user_id || !email || !priceId) {
+    if (!email || !priceId) {
       return new Response(JSON.stringify({ error: "Parâmetros inválidos" }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
