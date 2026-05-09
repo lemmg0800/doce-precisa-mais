@@ -19,15 +19,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
-      setSession(s);
       // Only (re)load on real sign-in / sign-out events.
       // Ignore TOKEN_REFRESHED / USER_UPDATED / INITIAL_SESSION which fire on tab focus
       // and would otherwise reset stores and unmount forms in progress.
       if (event === "SIGNED_IN") {
+        setSession(s);
         setTimeout(() => {
           loadAll().catch(() => {});
         }, 0);
       } else if (event === "SIGNED_OUT") {
+        setSession(null);
         reset();
       }
     });
