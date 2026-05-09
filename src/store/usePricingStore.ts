@@ -381,6 +381,7 @@ export const usePricingStore = create<State>()((set, get) => ({
     await get().loadAll();
     return data.id as string;
   },
+  updateProduto: async (id, p) => {
     const { error } = await supabase
       .from("produtos")
       .update({
