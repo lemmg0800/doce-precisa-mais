@@ -62,19 +62,19 @@ function AuthPage() {
         navigate({ to: "/" });
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro";
+      const rawMsg = err instanceof Error ? err.message : "Erro";
       const code = (err as { code?: string })?.code;
       const isUnconfirmed =
         code === "email_not_confirmed" ||
-        /email not confirmed/i.test(msg) ||
-        /not confirmed/i.test(msg);
+        /email not confirmed/i.test(rawMsg) ||
+        /not confirmed/i.test(rawMsg);
       if (isUnconfirmed && mode === "signin") {
         toast.error("Você precisa confirmar seu email antes de entrar. Verifique sua caixa de entrada.", {
           action: { label: "Reenviar", onClick: () => resendConfirmation(email) },
           duration: 8000,
         });
       } else {
-        toast.error(msg);
+        toast.error(translateAuthError(rawMsg, code));
       }
     } finally {
       setBusy(false);
