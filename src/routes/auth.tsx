@@ -9,6 +9,7 @@ import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
 import { Check, Mail } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -148,12 +149,12 @@ function AuthPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="h-11 w-11 rounded-xl bg-primary text-primary-foreground grid place-items-center font-display font-bold text-xl">
-              ƒ
-            </div>
-            <div>
-              <CardTitle className="font-display text-2xl">Forneria</CardTitle>
-              <CardDescription>Precificação artesanal</CardDescription>
+            <img src={logo} alt="Preciflow" className="h-11 w-11 rounded-full object-cover" />
+            <div className="leading-tight">
+              <CardTitle className="font-display text-2xl">Preciflow</CardTitle>
+              <CardDescription className="text-[10px] uppercase tracking-widest">
+                Precificação artesanal
+              </CardDescription>
             </div>
           </div>
           <CardDescription>
