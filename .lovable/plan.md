@@ -1,35 +1,58 @@
-## Problema
+## Diagnóstico
 
-Ao trocar de aba/programa e voltar ao navegador, a tela exibe "Verificando assinatura..." em tela cheia e desmonta o formulário em edição, fazendo o usuário perder o que estava digitando (ingrediente, produto, receita ou kit).
+Confirmei o problema testando a URL publicada:
+
+```
+GET https://alquimista-precifica.lovable.app/sucesso       → 404 (text/plain "Not Found")
+GET https://alquimista-precifica.lovable.app/assinatura    → 404 (text/plain "Not Found")
+GET https://alquimista-precifica.lovable.app/              → 200 (HTML)
+```
+
+A resposta **"Not Found" é em texto puro vinda da camada de hospedagem (Cloudflare)**, não da aplicação React. Ou seja: a requisição nem chega ao app — o servidor não está caindo no fallback de SPA que serve o `index.html` para rotas desconhecidas. Por isso, qualquer URL acessada diretamente (refresh, link colado, redirect do Stripe) quebra; a navegação interna funciona porque é resolvida no cliente sem nova requisição ao servidor.
 
 ## Causa raiz
 
-Em `src/hooks/useSubscription.ts`:
+Na turn anterior foi adicionado em `wrangler.jsonc`:
 
-1. O callback `load` é memoizado com `useCallback(..., [user])` — depende do **objeto `user` inteiro**.
-2. Em `AuthProvider`, sempre que o navegador volta ao foco, o Supabase dispara `TOKEN_REFRESHED` e chama `setSession(s)` com um **novo objeto session** (mesmo `user.id`, referência diferente).
-3. Como `user` é uma nova referência, o `useCallback` recria `load`, o `useEffect([ready, load])` dispara de novo e executa `load(false)` — que faz `setLoading(true)`.
-4. `AccessGate` observa `loading` e renderiza o overlay "Verificando assinatura...", desmontando toda a árvore filha (incluindo o formulário aberto).
+```json
+"assets": {
+  "directory": "./dist",
+  "not_found_handling": "single-page-application"
+}
+```
 
-A proteção que já existe em `AuthProvider` (ignorar `TOKEN_REFRESHED` para não chamar `loadAll`) não cobre esse caso, porque o problema é o efeito reagir à **mudança de referência** do `user`.
+Essa configuração é **correta** e diz à hospedagem para devolver `dist/index.html` em qualquer rota não encontrada. Porém **ela só passa a valer após uma nova publicação** — alterações de configuração de hospedagem/frontend não vão ao ar automaticamente, apenas mudanças de backend (edge functions/migrations).
 
-## Correção
+Como ainda há rotas retornando 404 da Cloudflare, a versão publicada **ainda é a anterior à correção do `wrangler.jsonc`**.
 
-Toda a alteração fica em `src/hooks/useSubscription.ts` — sem mudar UI, store, ou lógica de assinatura.
+## Plano de correção
 
-1. **Estabilizar a dependência:** trocar `[user]` por `[user?.id]` no `useCallback` de `load` e nos `useEffect`s. Assim, refresh de token (mesmo `id`) não recria o callback nem dispara recarga.
-2. **Carregar uma única vez por usuário:** usar um `ref` (`loadedForUserIdRef`) para garantir que `load(false)` (com loading visível) rode **apenas na primeira vez** que o `user.id` é conhecido. Trocas de usuário continuam disparando recarga normal; volta de aba não dispara nada.
-3. **Refresh ao mudar de rota permanece silencioso** (já está com `load(true)` e janela de 30s) — atende exatamente o que você pediu: "verificação ao navegar entre produtos, configurações, kits".
-4. **Refresh em background a cada 5 min permanece silencioso** — não afeta a UI.
+### 1. Republicar a aplicação (passo obrigatório do usuário)
+Clicar em **Publish → Update** no canto superior direito do editor. Isso reimplanta `dist/` + `wrangler.jsonc` atualizados na borda da Cloudflare e ativa o `single-page-application` not-found handling.
 
-## Resultado esperado
+### 2. Verificar com curl após o deploy
+Vou validar com:
+```
+curl -I https://alquimista-precifica.lovable.app/sucesso
+curl -I https://alquimista-precifica.lovable.app/assinatura?session_id=teste
+curl -I https://alquimista-precifica.lovable.app/produtos
+```
+Esperado: `HTTP/2 200` com `content-type: text/html` para todas.
 
-- Trocar de aba e voltar: nenhum overlay, formulário preservado.
-- Trocar de programa e voltar: idem.
-- Navegar entre rotas internas: assinatura é revalidada em segundo plano sem flash.
-- Login/logout: comportamento inalterado.
-- Verificação inicial após login: continua mostrando "Verificando assinatura..." normalmente.
+### 3. Validar fluxo Stripe ponta a ponta
+- Iniciar uma assinatura → conferir redirect para `/sucesso?session_id=...` carregando a página corretamente.
+- Conferir também `/cancelado`.
 
-## Arquivos afetados
+### 4. Plano B (caso o passo 1 não resolva)
+Se mesmo após o republish o 404 persistir, investigarei:
+- Se o `bun run build` está realmente gerando `dist/index.html` (pode haver um erro de build silencioso).
+- Se a hospedagem da Lovable está respeitando o `not_found_handling` do `wrangler.jsonc` para este projeto, ou se o roteamento esperado é via outro mecanismo (por exemplo, configuração do template TanStack Start).
+- Logs de build/deploy no painel de publicação.
 
-- `src/hooks/useSubscription.ts` (única alteração)
+## Observação sobre o redirect do Stripe
+
+A `success_url` configurada na função `criar-checkout` aponta para `/sucesso?session_id={CHECKOUT_SESSION_ID}`. Não é necessário mudar nada lá — assim que a SPA fallback estiver ativa, o redirect vai funcionar normalmente, pois o `?session_id=...` é apenas query string e não interfere no roteamento.
+
+## Resumo do que muda no código
+
+**Nada.** A correção já está no `wrangler.jsonc`. O bloqueio é apenas a republicação. Após confirmar que funciona, qualquer rota (`/sucesso`, `/produtos`, `/configuracoes`, etc.) abrirá direto, com refresh, deep link ou redirect externo.
