@@ -1,54 +1,35 @@
-## Diagnóstico
+## Problema
 
-Confirmei o problema testando o site publicado:
+Ao trocar de aba/programa e voltar ao navegador, a tela exibe "Verificando assinatura..." em tela cheia e desmonta o formulário em edição, fazendo o usuário perder o que estava digitando (ingrediente, produto, receita ou kit).
 
-- `GET https://alquimista-precifica.lovable.app/produtos` → **HTTP 404** (resposta `Not Found` em texto puro, vinda do Cloudflare, antes de o app sequer carregar).
-- `GET https://alquimista-precifica.lovable.app/materias-primas` → **HTTP 404**.
-- `GET https://alquimista-precifica.lovable.app/configuracoes` → **HTTP 404**.
-- `GET https://alquimista-precifica.lovable.app/` → 200 com o HTML do app.
+## Causa raiz
 
-Ou seja: o erro **não é** do TanStack Router nem das rotas do app (todas existem corretamente em `src/routes/`). O problema é que o servidor de hospedagem não está entregando `index.html` para URLs que não correspondem a um arquivo estático.
+Em `src/hooks/useSubscription.ts`:
 
-## Por que o `public/_redirects` não funcionou
+1. O callback `load` é memoizado com `useCallback(..., [user])` — depende do **objeto `user` inteiro**.
+2. Em `AuthProvider`, sempre que o navegador volta ao foco, o Supabase dispara `TOKEN_REFRESHED` e chama `setSession(s)` com um **novo objeto session** (mesmo `user.id`, referência diferente).
+3. Como `user` é uma nova referência, o `useCallback` recria `load`, o `useEffect([ready, load])` dispara de novo e executa `load(false)` — que faz `setLoading(true)`.
+4. `AccessGate` observa `loading` e renderiza o overlay "Verificando assinatura...", desmontando toda a árvore filha (incluindo o formulário aberto).
 
-O projeto é publicado como um **Cloudflare Worker** (`wrangler.jsonc` presente, com `main: "@tanstack/react-start/server-entry"`), e não como Cloudflare Pages. O arquivo `public/_redirects` é uma convenção do **Cloudflare Pages** — em Workers com Static Assets ele é simplesmente ignorado, por isso o F5 continua caindo em 404 mesmo após o último update.
-
-Além disso, o `wrangler.jsonc` aponta `main` para `@tanstack/react-start/server-entry`, mas o `package.json` do projeto **não** tem `@tanstack/react-start` instalado — só `@tanstack/react-router`. O app roda como SPA puro (bootstrap em `src/main.tsx` com `RouterProvider`), e o Worker provavelmente está só servindo os assets estáticos sem fallback configurado para SPA.
+A proteção que já existe em `AuthProvider` (ignorar `TOKEN_REFRESHED` para não chamar `loadAll`) não cobre esse caso, porque o problema é o efeito reagir à **mudança de referência** do `user`.
 
 ## Correção
 
-Configurar o fallback SPA diretamente no `wrangler.jsonc` usando o recurso nativo de Static Assets do Workers, que é o modo correto para esta stack:
+Toda a alteração fica em `src/hooks/useSubscription.ts` — sem mudar UI, store, ou lógica de assinatura.
 
-```jsonc
-{
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "tanstack-start-app",
-  "compatibility_date": "2025-09-24",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "directory": "./dist",
-    "not_found_handling": "single-page-application"
-  }
-}
-```
+1. **Estabilizar a dependência:** trocar `[user]` por `[user?.id]` no `useCallback` de `load` e nos `useEffect`s. Assim, refresh de token (mesmo `id`) não recria o callback nem dispara recarga.
+2. **Carregar uma única vez por usuário:** usar um `ref` (`loadedForUserIdRef`) para garantir que `load(false)` (com loading visível) rode **apenas na primeira vez** que o `user.id` é conhecido. Trocas de usuário continuam disparando recarga normal; volta de aba não dispara nada.
+3. **Refresh ao mudar de rota permanece silencioso** (já está com `load(true)` e janela de 30s) — atende exatamente o que você pediu: "verificação ao navegar entre produtos, configurações, kits".
+4. **Refresh em background a cada 5 min permanece silencioso** — não afeta a UI.
 
-Pontos:
-- `not_found_handling: "single-page-application"` faz o Cloudflare devolver `index.html` (com status 200) para qualquer rota que não case com um arquivo estático — exatamente o comportamento que `_redirects` tentava replicar.
-- Removo o `main` apontando para `@tanstack/react-start/server-entry` (pacote não instalado, sem efeito útil hoje) para o Worker servir puramente assets estáticos, que é o que esta SPA precisa.
-- O `directory` precisa bater com o output do Vite (`dist` por padrão); confirmo no momento da implementação se há override no projeto.
-- Removo o `public/_redirects` que ficou inerte, para não confundir manutenção futura.
+## Resultado esperado
 
-## Como vou validar
+- Trocar de aba e voltar: nenhum overlay, formulário preservado.
+- Trocar de programa e voltar: idem.
+- Navegar entre rotas internas: assinatura é revalidada em segundo plano sem flash.
+- Login/logout: comportamento inalterado.
+- Verificação inicial após login: continua mostrando "Verificando assinatura..." normalmente.
 
-1. Após o publish, refazer:
-   - `curl -I https://alquimista-precifica.lovable.app/produtos`
-   - `curl -I https://alquimista-precifica.lovable.app/materias-primas`
-   - `curl -I https://alquimista-precifica.lovable.app/configuracoes`
-   
-   Esperado: **HTTP 200** com `content-type: text/html` em todas.
+## Arquivos afetados
 
-2. Abrir cada rota no navegador e dar F5: deve renderizar a página normalmente, sem tela preta nem "Not Found".
-
-## Observação importante
-
-A mudança em `wrangler.jsonc` é uma **alteração de configuração de deploy**, então só passa a valer após você clicar em **Publish → Update** novamente. No preview do editor o F5 já funciona porque o sandbox usa o Vite dev server (que tem fallback SPA embutido) — o problema é exclusivo do site publicado.
+- `src/hooks/useSubscription.ts` (única alteração)
