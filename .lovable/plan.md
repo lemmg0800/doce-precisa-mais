@@ -1,58 +1,34 @@
-# Melhorias no fluxo de cadastro e login
-
 ## Objetivo
+Corrigir o problema em que páginas como `/sucesso`, `/cancelado` e outras rotas diretas mostram **Not Found** ao atualizar, abrir o link direto ou voltar da Stripe, garantindo que funcionem sem precisar partir da `/`.
 
-Tornar o fluxo de criação de conta mais claro:
-1. Mostrar as regras de senha **antes** do usuário tentar criar
-2. Após cadastro, mostrar tela/mensagem dizendo que um email de confirmação foi enviado
-3. Se o usuário tentar fazer login sem ter confirmado o email, mostrar mensagem específica explicando o motivo (em vez do erro genérico do Supabase)
+## O que será feito
+1. **Diagnosticar a origem do erro no ambiente publicado**
+   - Confirmar por que o domínio publicado está respondendo `Not Found` em rotas válidas como `/auth` e `/sucesso`.
+   - Diferenciar falha de roteamento do app vs. falha do deploy publicado.
 
-## Escopo
+2. **Ajustar a configuração de entrada/roteamento do app, se necessário**
+   - Revisar a configuração do router e da rota raiz para garantir suporte correto a acesso direto, refresh e navegação vinda de serviços externos.
+   - Corrigir qualquer comportamento que esteja tratando páginas válidas como inexistentes.
 
-Tudo acontece no arquivo `src/routes/auth.tsx`. Nenhuma mudança de backend/banco/configurações de auth — o Supabase já está configurado para exigir confirmação de email (auto-confirm desativado, conforme regra do projeto).
+3. **Validar o fluxo público de retorno da Stripe**
+   - Conferir se as páginas de retorno (`/sucesso` e `/cancelado`) continuam públicas e acessíveis mesmo sem sessão iniciada.
+   - Garantir que o usuário consiga cair nessas rotas diretamente pelo redirecionamento do checkout.
 
-## Mudanças
+4. **Verificar URLs usadas no pagamento**
+   - Confirmar que os links de sucesso/cancelamento apontam para o domínio publicado correto, e não para preview, rota antiga ou URL inconsistente.
 
-### 1. Regras de senha visíveis no modo "criar conta"
+5. **Testar os cenários críticos**
+   - Abrir `/auth` direto.
+   - Abrir `/sucesso` direto.
+   - Atualizar a página em uma rota interna.
+   - Simular retorno externo para validar o fluxo completo.
 
-Abaixo do campo Senha, quando `mode === "signup"`, exibir uma lista das regras:
-- Mínimo de 6 caracteres
-- (manter alinhado ao `minLength={6}` que já existe — sem inventar regras que o backend não valida)
+## Achados atuais
+- As rotas existem no código (`/sucesso`, `/cancelado`, `/auth`).
+- O problema não parece ser ausência de arquivo de rota.
+- No domínio publicado, `/sucesso` e `/auth` estão retornando `Not Found`, o que indica problema no app publicado ou no deploy atual, não apenas na navegação interna.
 
-Estilo discreto: `text-xs text-muted-foreground` em lista com checkmarks que ficam verdes conforme o usuário digita (validação visual em tempo real).
-
-### 2. Tela de "verifique seu email" pós-cadastro
-
-Após `supabase.auth.signUp` ter sucesso, em vez de só mostrar um toast e voltar para "signin", trocar o conteúdo do Card por uma tela de confirmação:
-
-- Ícone de email
-- Título: "Confirme seu email"
-- Texto: "Enviamos um link de confirmação para **{email}**. Clique no link para ativar sua conta antes de entrar."
-- Botão "Voltar para login" que retorna ao formulário em modo signin
-- Botão secundário "Reenviar email" que chama `supabase.auth.resend({ type: 'signup', email })`
-
-Controlado por novo estado local `signupEmailSent: string | null`.
-
-### 3. Mensagem clara no login quando email não foi confirmado
-
-Hoje o catch genérico mostra `err.message` direto do Supabase ("Email not confirmed"). Trocar para detectar esse caso específico:
-
-```
-if (err.message.includes("Email not confirmed") || err.code === "email_not_confirmed") {
-  toast.error("Você precisa confirmar seu email antes de entrar. Verifique sua caixa de entrada.", {
-    action: { label: "Reenviar email", onClick: () => supabase.auth.resend(...) }
-  });
-}
-```
-
-Mantém os outros erros (senha errada, etc.) com a mensagem padrão.
-
-## Arquivos afetados
-
-- `src/routes/auth.tsx` — única edição
-
-## Fora de escopo
-
-- Não alterar configurações de auth do Supabase (auto-confirm continua desativado)
-- Não criar página `/reset-password` (não foi pedido)
-- Não mexer em templates de email (continuam os padrão da Lovable Cloud)
+## Detalhes técnicos
+- Revisar `src/router.tsx` e `src/routes/__root.tsx` em conjunto com o comportamento publicado.
+- Confirmar que a navegação protegida não está interferindo em rotas públicas ao entrar direto por URL.
+- Validar o comportamento final no domínio publicado após a correção.
