@@ -1,45 +1,54 @@
-## Por que isso acontece
+## Diagnóstico
 
-O projeto é uma SPA (Single Page Application) construída com Vite + TanStack Router. Toda a navegação (`/produtos`, `/materias-primas`, `/kits`, etc.) acontece **no navegador** — esses caminhos não existem como arquivos no servidor.
+Confirmei o problema testando o site publicado:
 
-Quando você está em `/` e navega clicando nos links, o React Router troca a tela sem pedir nada ao servidor. Mas quando você dá **F5 em `/materias-primas`**, o navegador faz uma requisição HTTP real para esse caminho. O servidor procura um arquivo chamado `materias-primas` e, como não existe, devolve **"Not Found"**.
+- `GET https://alquimista-precifica.lovable.app/produtos` → **HTTP 404** (resposta `Not Found` em texto puro, vinda do Cloudflare, antes de o app sequer carregar).
+- `GET https://alquimista-precifica.lovable.app/materias-primas` → **HTTP 404**.
+- `GET https://alquimista-precifica.lovable.app/configuracoes` → **HTTP 404**.
+- `GET https://alquimista-precifica.lovable.app/` → 200 com o HTML do app.
 
-Em `/` funciona porque existe `index.html` na raiz, então o servidor encontra e devolve normalmente.
+Ou seja: o erro **não é** do TanStack Router nem das rotas do app (todas existem corretamente em `src/routes/`). O problema é que o servidor de hospedagem não está entregando `index.html` para URLs que não correspondem a um arquivo estático.
 
-A solução padrão para SPA é dizer ao servidor: *"para qualquer URL que não seja um arquivo real, devolva sempre o `index.html`"*. Aí o JavaScript do TanStack Router carrega e renderiza a página correta no cliente.
+## Por que o `public/_redirects` não funcionou
 
-## O que fazer
+O projeto é publicado como um **Cloudflare Worker** (`wrangler.jsonc` presente, com `main: "@tanstack/react-start/server-entry"`), e não como Cloudflare Pages. O arquivo `public/_redirects` é uma convenção do **Cloudflare Pages** — em Workers com Static Assets ele é simplesmente ignorado, por isso o F5 continua caindo em 404 mesmo após o último update.
 
-Criar um arquivo de fallback de SPA que o host (Cloudflare) entende, redirecionando todas as rotas desconhecidas para o `index.html` com status 200 (não 301/302, para preservar a URL na barra do navegador).
+Além disso, o `wrangler.jsonc` aponta `main` para `@tanstack/react-start/server-entry`, mas o `package.json` do projeto **não** tem `@tanstack/react-start` instalado — só `@tanstack/react-router`. O app roda como SPA puro (bootstrap em `src/main.tsx` com `RouterProvider`), e o Worker provavelmente está só servindo os assets estáticos sem fallback configurado para SPA.
 
-### Arquivo a criar
+## Correção
 
-```text
-public/_redirects
+Configurar o fallback SPA diretamente no `wrangler.jsonc` usando o recurso nativo de Static Assets do Workers, que é o modo correto para esta stack:
+
+```jsonc
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tanstack-start-app",
+  "compatibility_date": "2025-09-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
 ```
 
-Conteúdo:
+Pontos:
+- `not_found_handling: "single-page-application"` faz o Cloudflare devolver `index.html` (com status 200) para qualquer rota que não case com um arquivo estático — exatamente o comportamento que `_redirects` tentava replicar.
+- Removo o `main` apontando para `@tanstack/react-start/server-entry` (pacote não instalado, sem efeito útil hoje) para o Worker servir puramente assets estáticos, que é o que esta SPA precisa.
+- O `directory` precisa bater com o output do Vite (`dist` por padrão); confirmo no momento da implementação se há override no projeto.
+- Removo o `public/_redirects` que ficou inerte, para não confundir manutenção futura.
 
-```text
-/*    /index.html   200
-```
+## Como vou validar
 
-Esse arquivo é copiado automaticamente pelo Vite para o build final. O Cloudflare lê o `_redirects` e passa a entregar o `index.html` para qualquer caminho que não corresponda a um asset real (JS, CSS, imagens continuam funcionando normalmente).
+1. Após o publish, refazer:
+   - `curl -I https://alquimista-precifica.lovable.app/produtos`
+   - `curl -I https://alquimista-precifica.lovable.app/materias-primas`
+   - `curl -I https://alquimista-precifica.lovable.app/configuracoes`
+   
+   Esperado: **HTTP 200** com `content-type: text/html` em todas.
 
-### Resultado esperado
+2. Abrir cada rota no navegador e dar F5: deve renderizar a página normalmente, sem tela preta nem "Not Found".
 
-- F5 em `/produtos`, `/materias-primas`, `/kits`, `/receitas`, `/configuracoes`, `/assinatura` → carrega a página corretamente.
-- URLs colados/compartilhados de qualquer rota → abrem direto na página certa.
-- Assets (favicon, imagens, JS, CSS) continuam servidos normalmente.
-- O `notFoundComponent` do TanStack Router continua aparecendo apenas para rotas que realmente não existem no app (ex: `/qualquer-coisa-inventada`), e não mais para refresh de páginas válidas.
+## Observação importante
 
-## Detalhes técnicos
-
-- O template originalmente foi gerado para TanStack **Start** (com SSR), por isso o `wrangler.jsonc` aponta para `@tanstack/react-start/server-entry`. Mas o pacote `@tanstack/react-start` **não está instalado** — o projeto na prática roda como SPA estática usando apenas `@tanstack/react-router`. Por isso o fallback de SPA via `_redirects` é a abordagem correta aqui (em vez de configurar SSR, que exigiria reescrever vários arquivos).
-- Não é necessário tocar em `vite.config.ts`, `wrangler.jsonc`, `__root.tsx` nem no `routeTree.gen.ts`.
-- Não é preciso reiniciar nada: após o deploy/republish, o `_redirects` passa a valer.
-
-## Plano de implementação
-
-1. Criar `public/_redirects` com a regra `/*  /index.html  200`.
-2. Pedir para você testar dando F5 em `/materias-primas` e em outras rotas internas.
+A mudança em `wrangler.jsonc` é uma **alteração de configuração de deploy**, então só passa a valer após você clicar em **Publish → Update** novamente. No preview do editor o F5 já funciona porque o sandbox usa o Vite dev server (que tem fallback SPA embutido) — o problema é exclusivo do site publicado.
