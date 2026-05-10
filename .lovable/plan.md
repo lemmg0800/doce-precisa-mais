@@ -1,58 +1,58 @@
-## Diagnóstico
+# Melhorias no fluxo de cadastro e login
 
-Confirmei o problema testando a URL publicada:
+## Objetivo
+
+Tornar o fluxo de criação de conta mais claro:
+1. Mostrar as regras de senha **antes** do usuário tentar criar
+2. Após cadastro, mostrar tela/mensagem dizendo que um email de confirmação foi enviado
+3. Se o usuário tentar fazer login sem ter confirmado o email, mostrar mensagem específica explicando o motivo (em vez do erro genérico do Supabase)
+
+## Escopo
+
+Tudo acontece no arquivo `src/routes/auth.tsx`. Nenhuma mudança de backend/banco/configurações de auth — o Supabase já está configurado para exigir confirmação de email (auto-confirm desativado, conforme regra do projeto).
+
+## Mudanças
+
+### 1. Regras de senha visíveis no modo "criar conta"
+
+Abaixo do campo Senha, quando `mode === "signup"`, exibir uma lista das regras:
+- Mínimo de 6 caracteres
+- (manter alinhado ao `minLength={6}` que já existe — sem inventar regras que o backend não valida)
+
+Estilo discreto: `text-xs text-muted-foreground` em lista com checkmarks que ficam verdes conforme o usuário digita (validação visual em tempo real).
+
+### 2. Tela de "verifique seu email" pós-cadastro
+
+Após `supabase.auth.signUp` ter sucesso, em vez de só mostrar um toast e voltar para "signin", trocar o conteúdo do Card por uma tela de confirmação:
+
+- Ícone de email
+- Título: "Confirme seu email"
+- Texto: "Enviamos um link de confirmação para **{email}**. Clique no link para ativar sua conta antes de entrar."
+- Botão "Voltar para login" que retorna ao formulário em modo signin
+- Botão secundário "Reenviar email" que chama `supabase.auth.resend({ type: 'signup', email })`
+
+Controlado por novo estado local `signupEmailSent: string | null`.
+
+### 3. Mensagem clara no login quando email não foi confirmado
+
+Hoje o catch genérico mostra `err.message` direto do Supabase ("Email not confirmed"). Trocar para detectar esse caso específico:
 
 ```
-GET https://alquimista-precifica.lovable.app/sucesso       → 404 (text/plain "Not Found")
-GET https://alquimista-precifica.lovable.app/assinatura    → 404 (text/plain "Not Found")
-GET https://alquimista-precifica.lovable.app/              → 200 (HTML)
-```
-
-A resposta **"Not Found" é em texto puro vinda da camada de hospedagem (Cloudflare)**, não da aplicação React. Ou seja: a requisição nem chega ao app — o servidor não está caindo no fallback de SPA que serve o `index.html` para rotas desconhecidas. Por isso, qualquer URL acessada diretamente (refresh, link colado, redirect do Stripe) quebra; a navegação interna funciona porque é resolvida no cliente sem nova requisição ao servidor.
-
-## Causa raiz
-
-Na turn anterior foi adicionado em `wrangler.jsonc`:
-
-```json
-"assets": {
-  "directory": "./dist",
-  "not_found_handling": "single-page-application"
+if (err.message.includes("Email not confirmed") || err.code === "email_not_confirmed") {
+  toast.error("Você precisa confirmar seu email antes de entrar. Verifique sua caixa de entrada.", {
+    action: { label: "Reenviar email", onClick: () => supabase.auth.resend(...) }
+  });
 }
 ```
 
-Essa configuração é **correta** e diz à hospedagem para devolver `dist/index.html` em qualquer rota não encontrada. Porém **ela só passa a valer após uma nova publicação** — alterações de configuração de hospedagem/frontend não vão ao ar automaticamente, apenas mudanças de backend (edge functions/migrations).
+Mantém os outros erros (senha errada, etc.) com a mensagem padrão.
 
-Como ainda há rotas retornando 404 da Cloudflare, a versão publicada **ainda é a anterior à correção do `wrangler.jsonc`**.
+## Arquivos afetados
 
-## Plano de correção
+- `src/routes/auth.tsx` — única edição
 
-### 1. Republicar a aplicação (passo obrigatório do usuário)
-Clicar em **Publish → Update** no canto superior direito do editor. Isso reimplanta `dist/` + `wrangler.jsonc` atualizados na borda da Cloudflare e ativa o `single-page-application` not-found handling.
+## Fora de escopo
 
-### 2. Verificar com curl após o deploy
-Vou validar com:
-```
-curl -I https://alquimista-precifica.lovable.app/sucesso
-curl -I https://alquimista-precifica.lovable.app/assinatura?session_id=teste
-curl -I https://alquimista-precifica.lovable.app/produtos
-```
-Esperado: `HTTP/2 200` com `content-type: text/html` para todas.
-
-### 3. Validar fluxo Stripe ponta a ponta
-- Iniciar uma assinatura → conferir redirect para `/sucesso?session_id=...` carregando a página corretamente.
-- Conferir também `/cancelado`.
-
-### 4. Plano B (caso o passo 1 não resolva)
-Se mesmo após o republish o 404 persistir, investigarei:
-- Se o `bun run build` está realmente gerando `dist/index.html` (pode haver um erro de build silencioso).
-- Se a hospedagem da Lovable está respeitando o `not_found_handling` do `wrangler.jsonc` para este projeto, ou se o roteamento esperado é via outro mecanismo (por exemplo, configuração do template TanStack Start).
-- Logs de build/deploy no painel de publicação.
-
-## Observação sobre o redirect do Stripe
-
-A `success_url` configurada na função `criar-checkout` aponta para `/sucesso?session_id={CHECKOUT_SESSION_ID}`. Não é necessário mudar nada lá — assim que a SPA fallback estiver ativa, o redirect vai funcionar normalmente, pois o `?session_id=...` é apenas query string e não interfere no roteamento.
-
-## Resumo do que muda no código
-
-**Nada.** A correção já está no `wrangler.jsonc`. O bloqueio é apenas a republicação. Após confirmar que funciona, qualquer rota (`/sucesso`, `/produtos`, `/configuracoes`, etc.) abrirá direto, com refresh, deep link ou redirect externo.
+- Não alterar configurações de auth do Supabase (auto-confirm continua desativado)
+- Não criar página `/reset-password` (não foi pedido)
+- Não mexer em templates de email (continuam os padrão da Lovable Cloud)
