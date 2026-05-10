@@ -1,50 +1,47 @@
-# Por que aparece "Not Found" e como resolver
+## Objetivo
+Garantir que cada rota principal (`/auth`, `/sucesso`, `/produtos`, etc.) exista como arquivo HTML próprio no build final, para que o domínio publicado abra links diretos e refresh sem depender de fallback de hospedagem.
 
-## Entendendo: as páginas JÁ são independentes no código
+## Contexto atual
+O projeto já contém a base do plano B:
+- `package.json` já roda `vite build && node scripts/prerender.mjs`
+- `scripts/prerender.mjs` já copia `dist/index.html` para rotas estáticas
+- o `dist/` local já tem pastas como `auth/`, `sucesso/`, `produtos/` com `index.html`
 
-Cada rota (`/auth`, `/sucesso`, `/produtos`, etc.) existe como arquivo próprio em `src/routes/` e está registrada no roteador. O problema **não é** falta de conexão entre páginas — quando você navega pelo menu (a partir do `/`), funciona perfeitamente porque o React/TanStack Router resolve a rota no navegador.
+Então a próxima implementação não é “inventar” o plano B, e sim consolidá-lo para publicação e validar o resultado no domínio ao vivo.
 
-O problema acontece **só quando o navegador pede a URL diretamente ao servidor** (F5, link do Stripe, link colado). Esse é um comportamento clássico de SPA (Single Page Application):
+## Plano
+1. Revisar o gerador de HTML das rotas
+- Confirmar que ele cobre todas as rotas públicas e privadas que precisam abrir direto por URL.
+- Garantir que ele ignore apenas rotas dinâmicas/auxiliares e não deixe nenhuma rota real de fora.
+- Se necessário, trocar a detecção por nome de arquivo por uma lista explícita de rotas estáticas para evitar falhas silenciosas.
 
-- O app é um único `index.html` + JavaScript.
-- O servidor precisa entregar esse mesmo `index.html` para qualquer URL, deixando o JS decidir qual tela mostrar.
-- Se o servidor não fizer isso, ele responde 404 nativo (foi o que aconteceu — confirmei agora: `GET /auth` na Cloudflare devolve `Not Found` em texto puro, sem nem chegar no React).
+2. Ajustar o build para publicação previsível
+- Manter o pós-build de pré-renderização como parte oficial do processo de build.
+- Evitar soluções paralelas que possam confundir o deploy, deixando o fluxo centrado no HTML físico por rota.
 
-Já adicionei `wrangler.jsonc` com `single-page-application` e `public/_redirects` com `/* /index.html 200`. Mesmo assim a hospedagem continua devolvendo 404, então o deploy publicado **ainda não está usando essas configurações novas**.
+3. Validar a independência das páginas
+- Verificar que `/auth`, `/assinatura`, `/sucesso`, `/cancelado`, `/materias-primas`, `/produtos`, `/receitas`, `/kits` e `/configuracoes` abrem sem passar pela home.
+- Confirmar que o roteamento do app continua funcionando normalmente depois que cada rota é servida pelo seu próprio `index.html`.
 
-## O que vou fazer
+4. Conferir o publicado
+- Depois da implementação, validar no domínio publicado que acessar a URL direta retorna a página correta em vez de `not found`.
+- Testar especialmente `/auth`, já que é a rota onde o problema aparece agora.
 
-### 1. Forçar o redeploy com as novas regras (passo principal)
+## Detalhes técnicos
+- Fonte das rotas: `src/routes/*.tsx`
+- Build atual: `vite build` + script `scripts/prerender.mjs`
+- Estratégia: gerar `dist/<rota>/index.html` para cada rota estática
+- Resultado esperado no build:
+```text
+/dist/auth/index.html
+/dist/sucesso/index.html
+/dist/produtos/index.html
+...
+```
 
-A causa mais provável é que o build publicado é antigo — anterior ao `_redirects`. O fluxo:
-
-- Confirmar que `public/_redirects` está sendo copiado para `dist/_redirects` no build (Vite faz isso por padrão para tudo em `public/`).
-- Pedir para você clicar em **Publish → Update** novamente (não basta o Update anterior — o `_redirects` foi adicionado depois).
-- Depois testar com `curl` direto: `GET /auth` precisa devolver `text/html` (o HTML do app), não `Not Found` em texto puro.
-
-### 2. Se o redeploy ainda falhar, plano B: pré-renderizar cada rota como HTML próprio
-
-Se a hospedagem Lovable estiver ignorando tanto o `wrangler.jsonc` quanto o `_redirects` (já vi indícios disso), podemos transformar cada rota em um arquivo HTML real durante o build. Assim:
-
-- `dist/auth/index.html`, `dist/sucesso/index.html`, `dist/produtos/index.html`, etc.
-- Cada um carrega o mesmo bundle JS, mas existe fisicamente como arquivo — qualquer hospedagem estática serve sem 404.
-- F5, link do Stripe e link compartilhado funcionam sem depender de regra de fallback.
-
-Implementação: adicionar um script pós-build que, para cada rota declarada, copia `dist/index.html` para `dist/<rota>/index.html`. Sem mudar nada no app — apenas garante que o servidor sempre encontra um arquivo.
-
-### 3. Validar
-
-Após a correção que funcionar:
-
-- `curl -I https://preciflow.lovable.app/auth` → `200` com `content-type: text/html`
-- F5 em `/produtos` e `/configuracoes` → carrega normalmente
-- Voltar do Stripe para `/sucesso?session_id=...` → mostra a tela de confirmação
-
-## Arquivos afetados
-
-- Nenhuma mudança no código do app.
-- Possivelmente um pequeno script de pós-build (`scripts/prerender.mjs`) e um ajuste no `package.json` se precisarmos do plano B.
-
-## Resumo em uma frase
-
-As páginas já são independentes — o problema é só a hospedagem não entregar o `index.html` quando você acessa direto uma rota. Primeiro tentamos corrigir via redeploy; se não resolver, geramos um HTML físico para cada rota.
+## Validação final
+Vou considerar concluído quando:
+- o build gerar HTML físico para todas as rotas estáticas relevantes
+- abrir `/auth` diretamente não der mais 404/not found
+- refresh em páginas internas continuar funcionando
+- links externos/retorno de pagamento para `/sucesso` também abrirem corretamente
