@@ -1,47 +1,39 @@
-## Objetivo
-Garantir que cada rota principal (`/auth`, `/sucesso`, `/produtos`, etc.) exista como arquivo HTML próprio no build final, para que o domínio publicado abra links diretos e refresh sem depender de fallback de hospedagem.
+## Problema confirmado
 
-## Contexto atual
-O projeto já contém a base do plano B:
-- `package.json` já roda `vite build && node scripts/prerender.mjs`
-- `scripts/prerender.mjs` já copia `dist/index.html` para rotas estáticas
-- o `dist/` local já tem pastas como `auth/`, `sucesso/`, `produtos/` com `index.html`
+O domínio publicado `preciflow.lovable.app` retorna **404** para `/auth`, `/sucesso` e demais rotas (apenas `/` responde 200). O pipeline de publish da Lovable não usa o `scripts/prerender.mjs` que adicionamos — ele faz o próprio build e só publica o que o framework gera nativamente, então os arquivos `dist/auth/index.html` nunca chegam ao hosting.
 
-Então a próxima implementação não é “inventar” o plano B, e sim consolidá-lo para publicação e validar o resultado no domínio ao vivo.
+## Plano C — pré-render no diretório `public/`
 
-## Plano
-1. Revisar o gerador de HTML das rotas
-- Confirmar que ele cobre todas as rotas públicas e privadas que precisam abrir direto por URL.
-- Garantir que ele ignore apenas rotas dinâmicas/auxiliares e não deixe nenhuma rota real de fora.
-- Se necessário, trocar a detecção por nome de arquivo por uma lista explícita de rotas estáticas para evitar falhas silenciosas.
+Tudo que está em `public/` é copiado tal e qual para a raiz do site publicado. Vamos criar um HTML "shell" idêntico ao `index.html` para cada rota da aplicação, dentro de `public/<rota>/index.html`. Como é um SPA, qualquer um desses HTMLs carrega o mesmo bundle React, e o TanStack Router renderiza a rota correta a partir da URL — eliminando o 404 em F5, retorno do Stripe ou link compartilhado.
 
-2. Ajustar o build para publicação previsível
-- Manter o pós-build de pré-renderização como parte oficial do processo de build.
-- Evitar soluções paralelas que possam confundir o deploy, deixando o fluxo centrado no HTML físico por rota.
+### Passos
 
-3. Validar a independência das páginas
-- Verificar que `/auth`, `/assinatura`, `/sucesso`, `/cancelado`, `/materias-primas`, `/produtos`, `/receitas`, `/kits` e `/configuracoes` abrem sem passar pela home.
-- Confirmar que o roteamento do app continua funcionando normalmente depois que cada rota é servida pelo seu próprio `index.html`.
+1. **Criar script `scripts/generate-static-routes.mjs`**
+   - Lê `index.html` da raiz do projeto
+   - Para cada rota pública listada explicitamente, escreve `public/<rota>/index.html` com o mesmo conteúdo
+   - Lista de rotas: `auth`, `assinatura`, `sucesso`, `cancelado`, `materias-primas`, `produtos`, `receitas`, `kits`, `configuracoes`
+   - Adiciona `.gitignore` interno apenas para os HTMLs gerados não serem confundidos com arquivos manuais (opcional)
 
-4. Conferir o publicado
-- Depois da implementação, validar no domínio publicado que acessar a URL direta retorna a página correta em vez de `not found`.
-- Testar especialmente `/auth`, já que é a rota onde o problema aparece agora.
+2. **Rodar o script uma vez** para commitar os HTMLs em `public/auth/index.html`, `public/sucesso/index.html`, etc.
+   - Esses arquivos passam a fazer parte do repositório e são publicados automaticamente pelo hosting estático da Lovable
 
-## Detalhes técnicos
-- Fonte das rotas: `src/routes/*.tsx`
-- Build atual: `vite build` + script `scripts/prerender.mjs`
-- Estratégia: gerar `dist/<rota>/index.html` para cada rota estática
-- Resultado esperado no build:
-```text
-/dist/auth/index.html
-/dist/sucesso/index.html
-/dist/produtos/index.html
-...
-```
+3. **Adicionar passo `prebuild`** no `package.json` para regenerar os HTMLs a partir do `index.html` sempre que ele mudar (mantém os shells em sincronia se títulos, metas ou scripts forem ajustados):
+   ```json
+   "prebuild": "node scripts/generate-static-routes.mjs"
+   ```
 
-## Validação final
-Vou considerar concluído quando:
-- o build gerar HTML físico para todas as rotas estáticas relevantes
-- abrir `/auth` diretamente não der mais 404/not found
-- refresh em páginas internas continuar funcionando
-- links externos/retorno de pagamento para `/sucesso` também abrirem corretamente
+4. **Limpar o passo antigo de prerender em `dist/`** (`scripts/prerender.mjs` e os sufixos no `build`/`build:dev`), já que agora a fonte de verdade está em `public/`. Mantemos o `build` enxuto: `vite build`.
+
+5. **Manter `public/_redirects`** como rede de proteção (`/*  /index.html  200`) para qualquer rota dinâmica futura que ainda não tenha HTML próprio.
+
+### Resultado esperado
+
+Após publicar:
+- `https://preciflow.lovable.app/auth` → 200, carrega a tela de login
+- `https://preciflow.lovable.app/sucesso` → 200, recebe o retorno do Stripe sem 404
+- Todas as demais rotas listadas funcionam por acesso direto, F5 e link compartilhado
+- A home continua funcionando como antes
+
+### Ação do usuário
+
+Após a implementação, **clicar em Publish → Update** no editor para que o novo build com os HTMLs em `public/` vá ao ar.
