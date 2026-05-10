@@ -33,10 +33,12 @@ export function useSubscription(): AccessInfo {
   const [assinatura, setAssinatura] = useState<Assinatura | null>(null);
   const [loading, setLoading] = useState(true);
   const lastFetchRef = useRef<number>(0);
+  const loadedForUserIdRef = useRef<string | null>(null);
+  const userId = user?.id ?? null;
 
   const load = useCallback(
     async (silent = false) => {
-      if (!user) {
+      if (!userId) {
         setAssinatura(null);
         setLoading(false);
         return;
@@ -45,34 +47,42 @@ export function useSubscription(): AccessInfo {
       const { data } = await supabase
         .from("assinaturas")
         .select("user_id,status,plano,current_period_end,trial_ends_at")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .maybeSingle();
       setAssinatura(data as Assinatura | null);
       lastFetchRef.current = Date.now();
       if (!silent) setLoading(false);
     },
-    [user],
+    [userId],
   );
 
-  // Initial load when auth becomes ready / user changes
+  // Initial load: only once per user.id (does not re-run on token refresh)
   useEffect(() => {
     if (!ready) return;
+    if (!userId) {
+      loadedForUserIdRef.current = null;
+      setAssinatura(null);
+      setLoading(false);
+      return;
+    }
+    if (loadedForUserIdRef.current === userId) return;
+    loadedForUserIdRef.current = userId;
     load(false);
-  }, [ready, load]);
+  }, [ready, userId, load]);
 
   // Silent refresh on route change (only if stale > 30s)
   useEffect(() => {
-    if (!ready || !user) return;
+    if (!ready || !userId) return;
     if (Date.now() - lastFetchRef.current < 30_000) return;
     load(true);
-  }, [location.pathname, ready, user, load]);
+  }, [location.pathname, ready, userId, load]);
 
   // Silent background refresh
   useEffect(() => {
-    if (!ready || !user) return;
+    if (!ready || !userId) return;
     const id = setInterval(() => load(true), REFRESH_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [ready, user, load]);
+  }, [ready, userId, load]);
 
   let hasAccess = false;
   let reason: AccessInfo["reason"] = "sem_assinatura";
