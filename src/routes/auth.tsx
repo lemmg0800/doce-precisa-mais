@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
-import { useEffect } from "react";
+import { Check, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -19,12 +19,28 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [signupEmailSent, setSignupEmailSent] = useState<string | null>(null);
   const navigate = useNavigate();
   const { session, ready } = useAuth();
 
   useEffect(() => {
     if (ready && session) navigate({ to: "/" });
   }, [ready, session, navigate]);
+
+  const resendConfirmation = async (targetEmail: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: targetEmail,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) throw error;
+      toast.success("Email de confirmação reenviado.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erro ao reenviar email";
+      toast.error(msg);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,8 +53,7 @@ function AuthPage() {
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast.success("Conta criada! Você já pode entrar.");
-        setMode("signin");
+        setSignupEmailSent(email);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -47,7 +62,19 @@ function AuthPage() {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro";
-      toast.error(msg);
+      const code = (err as { code?: string })?.code;
+      const isUnconfirmed =
+        code === "email_not_confirmed" ||
+        /email not confirmed/i.test(msg) ||
+        /not confirmed/i.test(msg);
+      if (isUnconfirmed && mode === "signin") {
+        toast.error("Você precisa confirmar seu email antes de entrar. Verifique sua caixa de entrada.", {
+          action: { label: "Reenviar", onClick: () => resendConfirmation(email) },
+          duration: 8000,
+        });
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setBusy(false);
     }
@@ -68,6 +95,53 @@ function AuthPage() {
       setBusy(false);
     }
   };
+
+  // Tela de "verifique seu email" após cadastro
+  if (signupEmailSent) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-background px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">
+              <Mail className="h-7 w-7" />
+            </div>
+            <CardTitle className="text-center font-display text-2xl">Confirme seu email</CardTitle>
+            <CardDescription className="text-center">
+              Enviamos um link de confirmação para{" "}
+              <span className="font-medium text-foreground">{signupEmailSent}</span>.
+              Clique no link para ativar sua conta antes de entrar.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            <Button
+              size="lg"
+              onClick={() => {
+                setSignupEmailSent(null);
+                setMode("signin");
+                setPassword("");
+              }}
+            >
+              Voltar para login
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => resendConfirmation(signupEmailSent)}
+            >
+              Reenviar email de confirmação
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Não recebeu? Confira a pasta de spam ou promoções.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const passwordRules = [
+    { label: "Mínimo de 6 caracteres", ok: password.length >= 6 },
+  ];
 
   return (
     <div className="min-h-screen grid place-items-center bg-background px-4">
@@ -98,6 +172,19 @@ function AuthPage() {
               <Input id="password" type="password" required minLength={6} value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete={mode === "signup" ? "new-password" : "current-password"} />
+              {mode === "signup" && (
+                <ul className="mt-1 grid gap-1 text-xs text-muted-foreground">
+                  {passwordRules.map((r) => (
+                    <li
+                      key={r.label}
+                      className={`flex items-center gap-2 ${r.ok ? "text-emerald-600 dark:text-emerald-500" : ""}`}
+                    >
+                      <Check className={`h-3.5 w-3.5 ${r.ok ? "opacity-100" : "opacity-40"}`} />
+                      {r.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <Button type="submit" disabled={busy} size="lg">
               {busy ? "Aguarde..." : mode === "signin" ? "Entrar" : "Criar conta"}
