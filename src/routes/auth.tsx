@@ -15,6 +15,25 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+function translateAuthError(msg: string, code?: string): string {
+  const m = msg.toLowerCase();
+  if (code === "weak_password" || /weak.*password|password.*weak|known to be weak|easy to guess|pwned/i.test(msg))
+    return "Esta senha é muito fraca ou já foi exposta em vazamentos. Escolha uma senha mais forte (combine letras, números e símbolos).";
+  if (code === "invalid_credentials" || /invalid login credentials/i.test(msg))
+    return "Email ou senha incorretos.";
+  if (code === "user_already_exists" || /already registered|already exists/i.test(msg))
+    return "Este email já está cadastrado. Faça login.";
+  if (/password should be at least/i.test(msg))
+    return "A senha deve ter pelo menos 6 caracteres.";
+  if (/invalid email/i.test(msg))
+    return "Email inválido.";
+  if (/rate limit|too many requests/i.test(msg))
+    return "Muitas tentativas. Aguarde alguns instantes e tente novamente.";
+  if (/network|fetch/i.test(m))
+    return "Erro de conexão. Verifique sua internet e tente novamente.";
+  return msg;
+}
+
 function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -62,19 +81,19 @@ function AuthPage() {
         navigate({ to: "/" });
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro";
+      const rawMsg = err instanceof Error ? err.message : "Erro";
       const code = (err as { code?: string })?.code;
       const isUnconfirmed =
         code === "email_not_confirmed" ||
-        /email not confirmed/i.test(msg) ||
-        /not confirmed/i.test(msg);
+        /email not confirmed/i.test(rawMsg) ||
+        /not confirmed/i.test(rawMsg);
       if (isUnconfirmed && mode === "signin") {
         toast.error("Você precisa confirmar seu email antes de entrar. Verifique sua caixa de entrada.", {
           action: { label: "Reenviar", onClick: () => resendConfirmation(email) },
           duration: 8000,
         });
       } else {
-        toast.error(msg);
+        toast.error(translateAuthError(rawMsg, code));
       }
     } finally {
       setBusy(false);
