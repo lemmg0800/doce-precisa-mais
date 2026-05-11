@@ -2,9 +2,9 @@
 import Stripe from "https://esm.sh/stripe@17.5.0?target=deno";
 
 const PRICE_MAP: Record<string, string> = {
-  mensal: "price_1TTU5ZIxq4nJu67Txt8mETbA",
-  semestral: "price_1TTU5ZIxq4nJu67TIPYC20i4",
-  anual: "price_1TTU5ZIxq4nJu67TBg2yZnBz",
+  mensal: "price_1TTi9kEk3Vivi26bcLKo23kT",
+  semestral: "price_1TTi9nEk3Vivi26bghJRP4QY",
+  anual: "price_1TTi9mEk3Vivi26brCxHzX9z",
 };
 
 const corsHeaders = {

@@ -9,9 +9,9 @@ const supabase = createClient(
 
 function planoFromPriceId(priceId?: string | null): string | null {
   switch (priceId) {
-    case "price_1TTU5ZIxq4nJu67Txt8mETbA": return "mensal";
-    case "price_1TTU5ZIxq4nJu67TIPYC20i4": return "semestral";
-    case "price_1TTU5ZIxq4nJu67TBg2yZnBz": return "anual";
+    case "price_1TTi9kEk3Vivi26bcLKo23kT": return "mensal";
+    case "price_1TTi9nEk3Vivi26bghJRP4QY": return "semestral";
+    case "price_1TTi9mEk3Vivi26brCxHzX9z": return "anual";
     default: return null;
   }
 }
