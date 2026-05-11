@@ -17,10 +17,12 @@ import {
 } from "@/store/usePricingStore";
 import type { TipoArredondamento, GastoMensal } from "@/store/types";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Upload, KeyRound, Calculator, Plus, Trash2, Pencil, Check, X, Lock } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Download, Upload, KeyRound, Calculator, Plus, Trash2, Pencil, Check, X, Lock, Send, MessageSquare, CheckCircle2 } from "lucide-react";
 import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAuth } from "@/components/AuthProvider";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/configuracoes")({
