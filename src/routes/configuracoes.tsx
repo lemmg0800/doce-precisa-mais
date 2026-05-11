@@ -124,6 +124,29 @@ function ConfigPage() {
 
   const set = (patch: Partial<typeof config>) => updateConfig({ ...config, ...patch });
 
+  const enviarSuporte = async () => {
+    if (!supAssunto) return toast.error("Selecione um assunto.");
+    const msg = supMensagem.trim();
+    if (msg.length < 10) return toast.error("A mensagem deve ter pelo menos 10 caracteres.");
+    if (msg.length > 2000) return toast.error("A mensagem deve ter no máximo 2000 caracteres.");
+    setSupBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("enviar-suporte", {
+        body: { assunto: supAssunto, mensagem: msg },
+      });
+      if (error) throw error;
+      if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+      toast.success("Mensagem enviada com sucesso. Retornaremos em breve.", { duration: 5000 });
+      setSupAssunto("");
+      setSupMensagem("");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao enviar mensagem.");
+    } finally {
+      setSupBusy(false);
+    }
+  };
+
+
   const changePassword = async () => {
     if (newPwd.length < 6) return toast.error("A senha deve ter pelo menos 6 caracteres.");
     setPwdBusy(true);
