@@ -429,7 +429,57 @@ function ConfigPage() {
             </Button>
           </CardContent>
         </Card>
-      </div>
-    </AppShell>
-  );
-}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" /> Fale conosco
+            </CardTitle>
+            <CardDescription>
+              Envie sugestões, reclamações ou relate problemas. Responderemos no e-mail da sua conta.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="text-xs text-muted-foreground">
+              Enviando como: <span className="font-medium text-foreground">{user?.email ?? "—"}</span>
+            </div>
+            <div className="grid gap-2">
+              <Label>Assunto</Label>
+              <Select value={contatoAssunto} onValueChange={setContatoAssunto}>
+                <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sugestao">Sugestão</SelectItem>
+                  <SelectItem value="reclamacao">Reclamação</SelectItem>
+                  <SelectItem value="problema_tecnico">Problema técnico</SelectItem>
+                  <SelectItem value="duvida">Dúvida</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Mensagem</Label>
+              <Textarea
+                rows={5}
+                maxLength={2000}
+                placeholder="Conte com detalhes (mín. 10 caracteres)…"
+                value={contatoMensagem}
+                onChange={(e) => setContatoMensagem(e.target.value)}
+              />
+              <div className="text-[11px] text-muted-foreground text-right tabular-nums">
+                {contatoMensagem.trim().length}/2000
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button onClick={enviarContato} disabled={contatoBusy}>
+                <Send className="h-4 w-4 mr-2" />
+                {contatoBusy ? "Enviando…" : "Enviar"}
+              </Button>
+              {contatoSucesso && (
+                <span className="flex items-center gap-1.5 text-sm text-success animate-in fade-in slide-in-from-left-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Mensagem enviada com sucesso!
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
