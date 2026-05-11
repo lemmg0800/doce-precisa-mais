@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import { AccessGate } from "@/components/AccessGate";
 
-const PUBLIC_PATHS = ["/auth", "/assinatura", "/sucesso", "/cancelado"];
+const PUBLIC_PATHS = ["/auth", "/assinatura", "/sucesso", "/cancelado", "/landing"];
 
 function NotFoundComponent() {
   return (
@@ -51,7 +51,7 @@ function AuthGate() {
 
   useEffect(() => {
     if (!ready) return;
-    if (!session && loc.pathname !== "/auth") {
+    if (!session && !PUBLIC_PATHS.includes(loc.pathname)) {
       navigate({ to: "/auth" });
     }
   }, [ready, session, loc.pathname, navigate]);
