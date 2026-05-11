@@ -51,6 +51,9 @@ function ConfigPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNome, setEditNome] = useState("");
   const [editValor, setEditValor] = useState(0);
+  const [supAssunto, setSupAssunto] = useState("");
+  const [supMensagem, setSupMensagem] = useState("");
+  const [supBusy, setSupBusy] = useState(false);
 
   const totalGastos = gastosTotalMensal(gastos);
   const percentualEfetivo = percentualCustoFixoEfetivo(config, gastos);
