@@ -95,6 +95,13 @@ function AssinaturaPage() {
   return (
     <div className="min-h-screen bg-background py-12 px-4">
       <div className="mx-auto max-w-5xl">
+        <div className="mb-6">
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/">
+              <ArrowLeft className="h-4 w-4 mr-2" /> Voltar ao início
+            </Link>
+          </Button>
+        </div>
         <div className="text-center mb-10">
           <h1 className="text-3xl md:text-4xl font-display font-semibold mb-3">{titulo}</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
