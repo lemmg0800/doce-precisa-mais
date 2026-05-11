@@ -1,39 +1,49 @@
-## Problema confirmado
+## Formulário de contato
 
-O domínio publicado `preciflow.lovable.app` retorna **404** para `/auth`, `/sucesso` e demais rotas (apenas `/` responde 200). O pipeline de publish da Lovable não usa o `scripts/prerender.mjs` que adicionamos — ele faz o próprio build e só publica o que o framework gera nativamente, então os arquivos `dist/auth/index.html` nunca chegam ao hosting.
+### Onde
+Novo card **"Fale conosco"** dentro de `src/routes/configuracoes.tsx`, abaixo de "Alterar senha".
 
-## Plano C — pré-render no diretório `public/`
+### Campos
+- **Assunto** (Select obrigatório): Sugestão, Reclamação, Problema técnico, Dúvida, Outro
+- **Mensagem** (Textarea obrigatória, 10–2000 chars)
+- E-mail do remetente: pego automaticamente da sessão (`supabase.auth.getUser().email`) — exibido como texto não editável ("Enviando como: seu@email.com")
+- Botão **Enviar**
 
-Tudo que está em `public/` é copiado tal e qual para a raiz do site publicado. Vamos criar um HTML "shell" idêntico ao `index.html` para cada rota da aplicação, dentro de `public/<rota>/index.html`. Como é um SPA, qualquer um desses HTMLs carrega o mesmo bundle React, e o TanStack Router renderiza a rota correta a partir da URL — eliminando o 404 em F5, retorno do Stripe ou link compartilhado.
+### Comportamento
+- Validação com zod (assunto enum + mensagem trim 10–2000)
+- Ao enviar com sucesso: badge verde "✓ Mensagem enviada com sucesso!" aparece dentro do card e some após **4 segundos**; formulário é limpo
+- Em erro: toast vermelho com a mensagem
+- Botão fica em estado "Enviando..." durante a requisição
 
-### Passos
+### Backend
 
-1. **Criar script `scripts/generate-static-routes.mjs`**
-   - Lê `index.html` da raiz do projeto
-   - Para cada rota pública listada explicitamente, escreve `public/<rota>/index.html` com o mesmo conteúdo
-   - Lista de rotas: `auth`, `assinatura`, `sucesso`, `cancelado`, `materias-primas`, `produtos`, `receitas`, `kits`, `configuracoes`
-   - Adiciona `.gitignore` interno apenas para os HTMLs gerados não serem confundidos com arquivos manuais (opcional)
+**1. Tabela `mensagens_contato`** (via migration, com RLS):
+- `user_id`, `email_remetente`, `assunto`, `mensagem`, `enviada_em`
+- RLS: usuário autenticado só pode INSERT linhas com seu próprio `user_id`; SELECT/UPDATE/DELETE bloqueados (apenas admin via service role lê)
 
-2. **Rodar o script uma vez** para commitar os HTMLs em `public/auth/index.html`, `public/sucesso/index.html`, etc.
-   - Esses arquivos passam a fazer parte do repositório e são publicados automaticamente pelo hosting estático da Lovable
+**2. Server route** `src/routes/api/contato.ts` (POST):
+- Middleware `requireSupabaseAuth` (só logados podem enviar)
+- Valida payload com zod
+- Insere na tabela `mensagens_contato`
+- Envia e-mail para **soludigi.alquimista@gmail.com** com:
+  - Assunto: `[Preciflow] {assunto} — {email_remetente}`
+  - Reply-To: e-mail do usuário (você responde direto pelo Gmail)
+  - Corpo: assunto + mensagem + e-mail/ID do usuário
 
-3. **Adicionar passo `prebuild`** no `package.json` para regenerar os HTMLs a partir do `index.html` sempre que ele mudar (mantém os shells em sincronia se títulos, metas ou scripts forem ajustados):
-   ```json
-   "prebuild": "node scripts/generate-static-routes.mjs"
-   ```
+**3. Envio de e-mail — Lovable Emails**
+Usa a infraestrutura nativa de e-mails do Lovable Cloud. Pré-requisito: domínio de e-mail verificado. Na implementação eu verifico o status do domínio:
+- Se já houver domínio configurado → uso direto
+- Se não houver → mostro o setup de domínio antes (você delega um subdomínio tipo `notify.preciflow.app` aos nameservers do Lovable). Depois disso o envio funciona automaticamente.
 
-4. **Limpar o passo antigo de prerender em `dist/`** (`scripts/prerender.mjs` e os sufixos no `build`/`build:dev`), já que agora a fonte de verdade está em `public/`. Mantemos o `build` enxuto: `vite build`.
+Não há e-mail de confirmação automático para o usuário (você pediu confirmação visual na tela apenas).
 
-5. **Manter `public/_redirects`** como rede de proteção (`/*  /index.html  200`) para qualquer rota dinâmica futura que ainda não tenha HTML próprio.
+### Arquivos tocados
+- `supabase/migrations/...` — nova tabela + RLS
+- `src/routes/api/contato.ts` — endpoint novo
+- `src/routes/configuracoes.tsx` — novo card "Fale conosco"
+- (eventual) setup de domínio de e-mail via diálogo
 
-### Resultado esperado
-
-Após publicar:
-- `https://preciflow.lovable.app/auth` → 200, carrega a tela de login
-- `https://preciflow.lovable.app/sucesso` → 200, recebe o retorno do Stripe sem 404
-- Todas as demais rotas listadas funcionam por acesso direto, F5 e link compartilhado
-- A home continua funcionando como antes
-
-### Ação do usuário
-
-Após a implementação, **clicar em Publish → Update** no editor para que o novo build com os HTMLs em `public/` vá ao ar.
+### Fora do escopo
+- Sem nova rota/menu (fica tudo em Ajustes)
+- Sem painel para visualizar mensagens dentro do app (você lê pelo Gmail)
+- Sem anexos

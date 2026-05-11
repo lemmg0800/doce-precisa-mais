@@ -17,10 +17,12 @@ import {
 } from "@/store/usePricingStore";
 import type { TipoArredondamento, GastoMensal } from "@/store/types";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Upload, KeyRound, Calculator, Plus, Trash2, Pencil, Check, X, Lock } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Download, Upload, KeyRound, Calculator, Plus, Trash2, Pencil, Check, X, Lock, Send, MessageSquare, CheckCircle2 } from "lucide-react";
 import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAuth } from "@/components/AuthProvider";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/configuracoes")({
@@ -29,6 +31,7 @@ export const Route = createFileRoute("/configuracoes")({
 
 function ConfigPage() {
   const { reason } = useSubscription();
+  const { user } = useAuth();
   const isAssinante = reason === "ativo";
   const config = usePricingStore((s) => s.config);
   const updateConfig = usePricingStore((s) => s.updateConfig);
@@ -47,6 +50,38 @@ function ConfigPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNome, setEditNome] = useState("");
   const [editValor, setEditValor] = useState(0);
+
+  // Fale conosco
+  const [contatoAssunto, setContatoAssunto] = useState<string>("");
+  const [contatoMensagem, setContatoMensagem] = useState("");
+  const [contatoBusy, setContatoBusy] = useState(false);
+  const [contatoSucesso, setContatoSucesso] = useState(false);
+
+  const enviarContato = async () => {
+    if (!user) return toast.error("Faça login para enviar.");
+    if (!contatoAssunto) return toast.error("Selecione um assunto.");
+    const msg = contatoMensagem.trim();
+    if (msg.length < 10) return toast.error("Mensagem muito curta (mín. 10 caracteres).");
+    if (msg.length > 2000) return toast.error("Mensagem muito longa (máx. 2000 caracteres).");
+    setContatoBusy(true);
+    try {
+      const { error } = await supabase.from("mensagens_contato").insert({
+        user_id: user.id,
+        email_remetente: user.email ?? "",
+        assunto: contatoAssunto,
+        mensagem: msg,
+      });
+      if (error) throw error;
+      setContatoMensagem("");
+      setContatoAssunto("");
+      setContatoSucesso(true);
+      setTimeout(() => setContatoSucesso(false), 4000);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao enviar mensagem.");
+    } finally {
+      setContatoBusy(false);
+    }
+  };
 
   const totalGastos = gastosTotalMensal(gastos);
   const percentualEfetivo = percentualCustoFixoEfetivo(config, gastos);
@@ -392,6 +427,60 @@ function ConfigPage() {
               <KeyRound className="h-4 w-4 mr-2" />
               {pwdBusy ? "Salvando..." : "Atualizar senha"}
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" /> Fale conosco
+            </CardTitle>
+            <CardDescription>
+              Envie sugestões, reclamações ou relate problemas. Responderemos no e-mail da sua conta.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="text-xs text-muted-foreground">
+              Enviando como: <span className="font-medium text-foreground">{user?.email ?? "—"}</span>
+            </div>
+            <div className="grid gap-2">
+              <Label>Assunto</Label>
+              <Select value={contatoAssunto} onValueChange={setContatoAssunto}>
+                <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sugestao">Sugestão</SelectItem>
+                  <SelectItem value="reclamacao">Reclamação</SelectItem>
+                  <SelectItem value="problema_tecnico">Problema técnico</SelectItem>
+                  <SelectItem value="duvida">Dúvida</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Mensagem</Label>
+              <Textarea
+                rows={5}
+                maxLength={2000}
+                placeholder="Conte com detalhes (mín. 10 caracteres)…"
+                value={contatoMensagem}
+                onChange={(e) => setContatoMensagem(e.target.value)}
+              />
+              <div className="text-[11px] text-muted-foreground text-right tabular-nums">
+                {contatoMensagem.trim().length}/2000
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button onClick={enviarContato} disabled={contatoBusy}>
+                <Send className="h-4 w-4 mr-2" />
+                {contatoBusy ? "Enviando…" : "Enviar"}
+              </Button>
+              {contatoSucesso && (
+                <span className="flex items-center gap-1.5 text-sm text-success animate-in fade-in slide-in-from-left-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Mensagem enviada com sucesso!
+                </span>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
