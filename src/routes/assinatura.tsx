@@ -6,7 +6,8 @@ import { useAuth } from "@/components/AuthProvider";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Lock, Sparkles, ShieldCheck } from "lucide-react";
+import { Lock, Sparkles, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/assinatura")({
   component: AssinaturaPage,
