@@ -51,6 +51,38 @@ function ConfigPage() {
   const [editNome, setEditNome] = useState("");
   const [editValor, setEditValor] = useState(0);
 
+  // Fale conosco
+  const [contatoAssunto, setContatoAssunto] = useState<string>("");
+  const [contatoMensagem, setContatoMensagem] = useState("");
+  const [contatoBusy, setContatoBusy] = useState(false);
+  const [contatoSucesso, setContatoSucesso] = useState(false);
+
+  const enviarContato = async () => {
+    if (!user) return toast.error("Faça login para enviar.");
+    if (!contatoAssunto) return toast.error("Selecione um assunto.");
+    const msg = contatoMensagem.trim();
+    if (msg.length < 10) return toast.error("Mensagem muito curta (mín. 10 caracteres).");
+    if (msg.length > 2000) return toast.error("Mensagem muito longa (máx. 2000 caracteres).");
+    setContatoBusy(true);
+    try {
+      const { error } = await supabase.from("mensagens_contato").insert({
+        user_id: user.id,
+        email_remetente: user.email ?? "",
+        assunto: contatoAssunto,
+        mensagem: msg,
+      });
+      if (error) throw error;
+      setContatoMensagem("");
+      setContatoAssunto("");
+      setContatoSucesso(true);
+      setTimeout(() => setContatoSucesso(false), 4000);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao enviar mensagem.");
+    } finally {
+      setContatoBusy(false);
+    }
+  };
+
   const totalGastos = gastosTotalMensal(gastos);
   const percentualEfetivo = percentualCustoFixoEfetivo(config, gastos);
   const isAuto = config.modo_custo_fixo === "automatico";
