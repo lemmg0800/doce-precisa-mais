@@ -16,6 +16,7 @@ const STATIC_ROUTES = [
   "receitas",
   "kits",
   "configuracoes",
+  "landing",
 ];
 
 function prerenderStaticRoutes() {
