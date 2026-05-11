@@ -406,6 +406,57 @@ function ConfigPage() {
 
         <Card>
           <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" /> Contato e Suporte
+            </CardTitle>
+            <CardDescription>
+              Envie sugestões, dúvidas ou relate um problema. Responderemos por e-mail.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div className="grid gap-2">
+              <Label>Seu e-mail</Label>
+              <Input value={user?.email ?? ""} disabled readOnly />
+            </div>
+            <div className="grid gap-2">
+              <Label>Assunto</Label>
+              <Select value={supAssunto} onValueChange={setSupAssunto}>
+                <SelectTrigger><SelectValue placeholder="Selecione um assunto" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Sugestão">Sugestão</SelectItem>
+                  <SelectItem value="Reclamação">Reclamação</SelectItem>
+                  <SelectItem value="Problema técnico">Problema técnico</SelectItem>
+                  <SelectItem value="Dúvida">Dúvida</SelectItem>
+                  <SelectItem value="Erro no sistema">Erro no sistema</SelectItem>
+                  <SelectItem value="Cobrança/Assinatura">Cobrança/Assinatura</SelectItem>
+                  <SelectItem value="Outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Mensagem</Label>
+              <Textarea
+                placeholder="Descreva sua mensagem (mín. 10 caracteres)"
+                value={supMensagem}
+                onChange={(e) => setSupMensagem(e.target.value)}
+                rows={5}
+                maxLength={2000}
+              />
+              <p className="text-xs text-muted-foreground text-right">
+                {supMensagem.length}/2000
+              </p>
+            </div>
+            <div>
+              <Button onClick={enviarSuporte} disabled={supBusy || !user?.email}>
+                <Send className="h-4 w-4 mr-2" />
+                {supBusy ? "Enviando..." : "Enviar mensagem"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle className="font-display">Alterar senha</CardTitle>
             <CardDescription>Defina uma nova senha de acesso.</CardDescription>
           </CardHeader>
