@@ -9,7 +9,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { CurrencyInput, NumberInput } from "@/components/inputs";
+import { useAuth } from "@/components/AuthProvider";
+import { MessageSquare, Send } from "lucide-react";
 import {
   usePricingStore,
   gastosTotalMensal,
