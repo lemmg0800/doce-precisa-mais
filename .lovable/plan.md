@@ -1,83 +1,44 @@
-# Relatório para Suporte Lovable — Falha no SPA fallback do hosting
+# Plano — Reforçar escopo do bug no relatório de suporte
 
-## Resumo
+## Objetivo
 
-Projeto SPA (Vite + TanStack Router, sem SSR) publicado em `https://preciflow.lovable.app`. Acesso direto a qualquer rota além de `/` retorna **HTTP 404** servido pelo Cloudflare do Lovable, mesmo com `wrangler.jsonc` declarando `not_found_handling: "single-page-application"` e `public/_redirects` com `/* /index.html 200`. Indica que o ambiente de publish não está aplicando o SPA fallback configurado.
+Ajustar `.lovable/plan.md` para que o suporte do Lovable entenda de imediato que **o SPA fallback está totalmente quebrado neste deployment**: qualquer URL diferente de `/` retorna 404 do Cloudflare, sem passar pelo handler de assets do Worker. Hoje o documento usa `/produtos` como exemplo principal e isso pode ser interpretado como problema de rota específica.
 
-## Evidência 1 — Resposta HTTP do domínio publicado
+## Mudanças no `.lovable/plan.md`
 
-Coletado em 11/05/2026 20:45 UTC:
+1. **Resumo (topo)** — trocar "Acesso direto a qualquer rota além de `/`" por uma frase mais incisiva:
+   > Toda e qualquer URL diferente de `/` retorna HTTP 404 do Cloudflare neste deployment. O problema não é específico de `/produtos` — afeta 100% das rotas filhas, incluindo rotas que existem em `src/routes/` e rotas inexistentes (que também deveriam cair no SPA fallback servindo `index.html`).
 
-```
-$ curl -sI https://preciflow.lovable.app/produtos
-HTTP/2 404 
-content-type: text/plain;charset=UTF-8
-server: cloudflare
-cf-ray: 9fa40774cc40ef54-LHR
-(sem header x-deployment-id — resposta não veio do deploy do app)
+2. **Evidência 1 (curl)** — expandir a coleta de evidências para mostrar que o 404 é uniforme. Adicionar respostas HTTP de pelo menos 4 rotas diferentes:
+   - `/produtos` (rota existente)
+   - `/auth` (rota existente, atualmente em uso pelo usuário)
+   - `/landing` (rota existente)
+   - `/qualquer-coisa-inexistente` (deveria cair no fallback e servir index.html com 200 — mas retorna 404)
+   
+   Mostrar que **nenhuma** delas tem `x-deployment-id`, confirmando que o request nem chega ao Worker do app.
 
-$ curl -sI https://preciflow.lovable.app/
-HTTP/2 200 
-content-type: text/html; charset=utf-8
-x-deployment-id: 82cf5dc55c8eef56673c41a41475f1d1824ebb1635b703eeb2125f8c91c79d84
-```
+3. **Evidência 5 (URLs)** — reescrever como:
+   > **Escopo do bug:** todas as URLs do domínio publicado retornam 404, exceto `/`. Isso inclui:
+   > - Rotas declaradas em `src/routes/`: `/produtos`, `/kits`, `/configuracoes`, `/materias-primas`, `/receitas`, `/assinatura`, `/landing`, `/auth`, `/cancelado`, `/sucesso`
+   > - URLs inexistentes (que deveriam ser tratadas pelo SPA fallback servindo `index.html` com 200, deixando o roteador cliente decidir): também retornam 404
+   > 
+   > Único endpoint funcional: `https://preciflow.lovable.app/` → 200
 
-A raiz é servida pelo deployment correto (`x-deployment-id` presente). `/produtos` retorna 404 genérico do Cloudflare sem `x-deployment-id`, indicando que o request não está caindo no handler de assets do Worker — o `not_found_handling: "single-page-application"` não está sendo respeitado.
+4. **Conclusão técnica** — adicionar uma frase final pedindo ao suporte para confirmar:
+   - Se o `wrangler.jsonc` deste projeto está sendo aplicado pelo deployment atual
+   - Se o `dist/_redirects` é considerado pelo runtime de hosting do Lovable
+   - Se há alguma flag/configuração no nível do workspace ou projeto que precisa ser ativada para que o SPA fallback funcione
 
-## Evidência 2 — `wrangler.jsonc` no repositório
+5. **Manter intactas** todas as outras seções (Evidência 2 wrangler.jsonc, Evidência 3 _redirects, Evidência 4 build local, Tentativas descartadas) — já estão corretas.
 
-```jsonc
-{
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "tanstack-start-app",
-  "compatibility_date": "2025-09-24",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "directory": "./dist",
-    "not_found_handling": "single-page-application"
-  }
-}
-```
+## Após a atualização
 
-## Evidência 3 — `public/_redirects` no repositório
+O arquivo `.lovable/plan.md` ficará pronto para você copiar/colar no Discord (`#help`) ou anexar no email para `support@lovable.dev`, junto com:
+- Context ID: `6951EAA2-1264-4A1A-A86D-817E462202C7`
+- Project ID: `5d254dca-0024-4a02-a120-69066bc5955b`
+- URL afetada: `https://preciflow.lovable.app`
 
-```
-/*    /index.html   200
-```
+## O que NÃO será feito
 
-## Evidência 4 — Build local validado
-
-`bun run build` executado com sucesso. Conteúdo de `dist/` após o build:
-
-```
-dist/
-├── _headers
-├── _redirects        ← copiado de public/, com /* /index.html 200
-├── assets/           ← única subpasta
-├── favicon.png
-└── index.html
-```
-
-- `dist/_redirects` existe e contém exatamente `/*    /index.html   200`.
-- `dist/_headers` existe com `Cache-Control: no-cache` em `/index.html`.
-- **Não existem** as pastas `dist/produtos/`, `dist/kits/`, `dist/configuracoes/` etc. — confirmando que nenhum workaround de prerender está poluindo a saída.
-- `dist/index.html` existe (servido corretamente em `/`).
-
-## Evidência 5 — URLs de referência
-
-- Projeto publicado: `https://preciflow.lovable.app`
-- Rota com 404 (uma de várias): `https://preciflow.lovable.app/produtos`
-- Outras rotas igualmente afetadas: `/kits`, `/configuracoes`, `/materias-primas`, `/receitas`, `/assinatura`, `/landing`, `/auth`
-- Raiz funciona: `https://preciflow.lovable.app/` → 200
-
-## Tentativas anteriores descartadas
-
-1. **Plugin `prerenderStaticRoutes()` em `vite.config.ts`** — workaround que copiava `dist/index.html` para `dist/<rota>/index.html` para forçar resposta 200 nas rotas. Removido porque (a) falhava silenciosamente em `closeBundle` em builds com múltiplos environments, (b) exigia manutenção manual de `STATIC_ROUTES` para cada nova rota, (c) cria semântica conflitante com SPA fallback. Não é solução para SPA — é remendo.
-2. **HashRouter / BrowserRouter (react-router-dom)** — descartado: o projeto usa TanStack Router file-based, e a documentação oficial do Lovable orienta explicitamente a não usar essas abordagens.
-3. **Editar `src/routeTree.gen.ts`** — descartado por ser arquivo gerado.
-
-## Conclusão técnica
-
-Todas as configurações necessárias do lado do código estão corretas e validadas no build local. O comportamento esperado é: qualquer URL não correspondente a um asset físico em `dist/` deve servir `dist/index.html` com status 200, deixando o TanStack Router resolver a rota no cliente. O ambiente de hosting do Lovable está, em vez disso, retornando 404 do Cloudflare diretamente, sem invocar o SPA fallback.
-
-Pedido ao suporte: investigar por que o deployment de `https://preciflow.lovable.app` não está aplicando `assets.not_found_handling: "single-page-application"` do `wrangler.jsonc` nem o `_redirects` presente em `dist/`.
+- Não vou tentar mais workarounds em código (prerender, HashRouter, edição de `routeTree.gen.ts`) — todos já foram descartados com justificativa no próprio relatório.
+- Não vou abrir o chamado em seu nome — isso precisa partir de você nos canais oficiais.
