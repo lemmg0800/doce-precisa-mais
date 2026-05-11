@@ -257,6 +257,33 @@ export type Database = {
         }
         Relationships: []
       }
+      mensagens_contato: {
+        Row: {
+          assunto: string
+          email_remetente: string
+          enviada_em: string
+          id: string
+          mensagem: string
+          user_id: string
+        }
+        Insert: {
+          assunto: string
+          email_remetente: string
+          enviada_em?: string
+          id?: string
+          mensagem: string
+          user_id: string
+        }
+        Update: {
+          assunto?: string
+          email_remetente?: string
+          enviada_em?: string
+          id?: string
+          mensagem?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       produto_itens: {
         Row: {
           created_at: string
