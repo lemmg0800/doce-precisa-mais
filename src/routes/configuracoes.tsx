@@ -483,3 +483,7 @@ function ConfigPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+    </AppShell>
+  );
+}
