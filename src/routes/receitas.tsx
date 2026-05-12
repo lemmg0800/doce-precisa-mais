@@ -54,7 +54,7 @@ function ReceitasPage() {
           <div>
             <h1 className="text-3xl md:text-4xl font-display font-semibold">Receitas</h1>
             <p className="text-muted-foreground mt-1">
-              Preparos reutilizáveis (massas, recheios, caldas) usados nos seus produtos.
+              Utilize massas, recheios e caldas em múltiplos produtos.
             </p>
           </div>
           <div className="flex gap-2">
