@@ -50,7 +50,7 @@ function KitsPage() {
           <div>
             <h1 className="text-3xl md:text-4xl font-display font-semibold">Kits de embalagem</h1>
             <p className="text-muted-foreground mt-1">
-              Agrupe embalagens reutilizáveis e use nos produtos.
+              Agrupe itens de embalagem e utilize facilmente nos produtos.
             </p>
           </div>
           <div className="flex gap-2">
