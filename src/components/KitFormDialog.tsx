@@ -117,7 +117,7 @@ export function KitFormDialog({ open, onOpenChange, initial }: Props) {
             {initial ? "Editar kit" : "Novo kit de embalagem"}
           </DialogTitle>
           <DialogDescription>
-            Agrupe embalagens reutilizáveis para usar nos produtos.
+            Agrupe itens de embalagem e utilize facilmente nos produtos.
           </DialogDescription>
         </DialogHeader>
 
