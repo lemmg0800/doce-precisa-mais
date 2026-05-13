@@ -37,24 +37,28 @@ import {
 export const Route = createFileRoute("/landing")({
   head: () => ({
     meta: [
-      { title: "Preciflow — Precificação inteligente para pequenos negócios de comida" },
+      { title: "Preciflow — Precificação para negócios de comida" },
       {
         name: "description",
         content:
-          "Calcule o preço ideal dos seus produtos sem planilhas. Ideal para confeitarias, hamburguerias, cafeterias, food trucks, açaiterias e produtores caseiros. Teste grátis.",
+          "Calcule o preço ideal dos seus produtos sem planilhas. Para confeitarias, hamburguerias, cafés, food trucks e produtores caseiros.",
       },
       {
         name: "keywords",
         content:
           "precificação, confeitaria, hamburgueria, cafeteria, food truck, açaiteria, marmitaria, ficha técnica, cálculo de custos, lucro, gestão de receitas",
       },
-      { property: "og:title", content: "Preciflow — Precificação inteligente para pequenos negócios de comida" },
+      { property: "og:title", content: "Preciflow — Precificação para negócios de comida" },
       {
         property: "og:description",
         content:
           "Descubra o preço ideal dos seus produtos e o lucro real de cada receita. Feito para pequenos empreendedores do mercado de alimentos.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://preciflow.lovable.app/landing" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://preciflow.lovable.app/landing" },
     ],
     scripts: [
       {
@@ -72,6 +76,22 @@ export const Route = createFileRoute("/landing")({
             price: "9.90",
             priceCurrency: "BRL",
           },
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            { "@type": "Question", name: "Funciona no celular?", acceptedAnswer: { "@type": "Answer", text: "Sim. O Preciflow é 100% responsivo: você usa do celular, tablet ou computador, sem instalar nada." } },
+            { "@type": "Question", name: "Preciso instalar algum programa?", acceptedAnswer: { "@type": "Answer", text: "Não. Tudo roda no navegador. Basta criar sua conta e começar." } },
+            { "@type": "Question", name: "Posso cancelar quando quiser?", acceptedAnswer: { "@type": "Answer", text: "Sim. Você cancela a assinatura a qualquer momento, sem multa." } },
+            { "@type": "Question", name: "Meus dados ficam salvos com segurança?", acceptedAnswer: { "@type": "Answer", text: "Sim. Seus dados ficam armazenados na nuvem com backup automático." } },
+            { "@type": "Question", name: "Preciso entender de Excel ou planilhas?", acceptedAnswer: { "@type": "Answer", text: "Não. O sistema foi feito para quem quer simplicidade — você só preenche e o cálculo acontece." } },
+            { "@type": "Question", name: "Funciona pra qualquer tipo de produto (doces, lanches, bebidas, marmitas, açaí)?", acceptedAnswer: { "@type": "Answer", text: "Sim. O Preciflow é genérico para qualquer negócio de comida: confeitaria, hamburgueria, cafeteria, food truck, açaiteria, marmitaria, produção caseira e mais." } },
+            { "@type": "Question", name: "O teste grátis exige cartão?", acceptedAnswer: { "@type": "Answer", text: "Não. Você pode testar antes e só assinar quando tiver certeza." } },
+          ],
         }),
       },
     ],

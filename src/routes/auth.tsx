@@ -164,13 +164,15 @@ function AuthPage() {
   ];
 
   return (
-    <div className="min-h-screen grid place-items-center bg-background px-4">
+    <main className="min-h-screen grid place-items-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center gap-3 mb-2">
-            <img src={logo} alt="Preciflow" className="h-11 w-11 rounded-full object-cover" />
+            <img src={logo} alt="Preciflow Logo" className="h-11 w-11 rounded-full object-cover" />
             <div className="leading-tight">
-              <CardTitle className="font-display text-2xl">Preciflow</CardTitle>
+              <h1 className="font-display text-2xl font-semibold">
+                {mode === "signin" ? "Entrar no Preciflow" : "Criar conta no Preciflow"}
+              </h1>
               <CardDescription className="text-[10px] uppercase tracking-widest">
                 Precificação artesanal
               </CardDescription>
@@ -244,6 +246,6 @@ function AuthPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

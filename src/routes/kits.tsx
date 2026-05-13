@@ -17,6 +17,14 @@ import type { KitEmbalagem } from "@/store/types";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/kits")({
+  head: () => ({
+    meta: [
+      { title: "Kits — Preciflow" },
+      { name: "description", content: "Monte combos e kits a partir dos seus produtos e calcule preço e lucro do conjunto." },
+      { property: "og:title", content: "Kits — Preciflow" },
+      { property: "og:description", content: "Monte combos e kits a partir dos seus produtos e calcule preço e lucro do conjunto." },
+    ],
+  }),
   component: KitsPage,
 });
 

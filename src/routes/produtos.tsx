@@ -20,6 +20,14 @@ import type { Produto, CategoriaProduto } from "@/store/types";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/produtos")({
+  head: () => ({
+    meta: [
+      { title: "Produtos — Preciflow" },
+      { name: "description", content: "Cadastre produtos, calcule custos e defina o preço de venda com a margem desejada." },
+      { property: "og:title", content: "Produtos — Preciflow" },
+      { property: "og:description", content: "Cadastre produtos, calcule custos e defina o preço de venda com a margem desejada." },
+    ],
+  }),
   component: ProdutosPage,
 });
 

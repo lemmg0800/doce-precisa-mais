@@ -21,6 +21,14 @@ import type { Receita } from "@/store/types";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/receitas")({
+  head: () => ({
+    meta: [
+      { title: "Receitas — Preciflow" },
+      { name: "description", content: "Organize massas, recheios e caldas reutilizáveis em múltiplos produtos da sua produção." },
+      { property: "og:title", content: "Receitas — Preciflow" },
+      { property: "og:description", content: "Organize massas, recheios e caldas reutilizáveis em múltiplos produtos da sua produção." },
+    ],
+  }),
   component: ReceitasPage,
 });
 
