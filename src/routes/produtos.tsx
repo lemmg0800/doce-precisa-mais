@@ -91,7 +91,6 @@ function ProdutosPage() {
 
   const totalFiltrado = grupos.reduce((s, g) => s + g.itens.length, 0);
 
-  const [expandedCats, setExpandedCats] = useState<string[]>([]);
   const hasInitRef = useRef(false);
 
   useEffect(() => {
