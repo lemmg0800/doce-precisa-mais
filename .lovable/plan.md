@@ -1,36 +1,27 @@
 ## Objetivo
 
-Resolver os 3 itens que sobraram da revisão de SEO/acessibilidade e te guiar no único passo que precisa de você (Google Search Console).
+Fazer com que, quando o usuário recolher (ou expandir) uma categoria na tela de Produtos, essa escolha seja lembrada após atualizar a página ou sair e entrar novamente.
 
-## O que vou fazer (sem precisar de você)
+## Como vai funcionar
 
-### 1. Landmark `<main>` em todas as páginas
-Páginas que ainda não têm `<main>`: `assinatura.tsx`, `sucesso.tsx`, `cancelado.tsx`. Trocar a `<div>` raiz por `<main>` em cada uma. Páginas que usam `AppShell` já estão cobertas.
+- Ao recolher/expandir uma categoria, salvamos a lista de categorias abertas no `localStorage` do navegador, com uma chave por usuário (ex.: `preciflow:produtos:categorias-abertas:<userId>`).
+- Ao abrir a página, lemos esse valor:
+  - Se existir, usamos exatamente o que o usuário deixou da última vez (categorias recolhidas continuam recolhidas).
+  - Se não existir (primeiro acesso), abrimos todas por padrão, como hoje.
+- Categorias novas criadas depois entram já expandidas; categorias excluídas somem da memória automaticamente.
 
-### 2. `aria-label` em botões só com ícone
-Adicionar nome acessível em todos os botões `size="icon"` que hoje só mostram um ícone (Pencil/Trash2/Copy/Check/X), nos arquivos:
-- `src/routes/produtos.tsx` (Copiar, Excluir)
-- `src/routes/receitas.tsx` (Copiar, Excluir)
-- `src/routes/kits.tsx` (Copiar, Excluir)
-- `src/routes/materias-primas.tsx` (Editar, Excluir)
-- `src/routes/configuracoes.tsx` (Salvar, Cancelar, Editar, Excluir gasto fixo)
-- `src/components/CategoriasManagerDialog.tsx` (Editar, Excluir, Salvar, Cancelar, mover ↑/↓)
-- `src/components/KitFormDialog.tsx`, `ProdutoFormDialog.tsx`, `ReceitaFormDialog.tsx` (Remover item)
+## Escopo / limites
 
-### 3. Marcar findings de a11y como corrigidos
-Após as edições, marcar `lighthouse:lighthouse_accessibility` e `agent_content:content` como fixed na revisão de SEO.
+- Persistência por **navegador + usuário**. Se a pessoa logar em outro dispositivo ou navegador, começa com tudo expandido naquele aparelho. Não sincroniza entre dispositivos (não envolve banco).
+- Aplica-se apenas à tela `/produtos`. Outras telas com accordion não são afetadas.
+- Sem alterações de backend, banco de dados ou autenticação.
 
-## O que precisa de você
+## Detalhes técnicos
 
-### Conectar o Google Search Console
-É o último item de SEO restante e depende do seu login Google. Quando você disser para seguir, eu disparo o conector e ele vai te pedir para autorizar a conta. Depois disso, você só precisa:
-
-1. Autorizar a conexão no popup que vai aparecer.
-2. Verificar a propriedade do domínio `https://preciflow.lovable.app/` no Google Search Console (eu te passo o passo a passo).
-3. Submeter o sitemap `https://preciflow.lovable.app/sitemap.xml` (eu também te oriento).
-
-### Republicar o app
-Os scans de SEO/Lighthouse rodam em cima da versão **publicada**, não da preview. Depois que eu terminar, você precisa clicar em **Publish → Update** no canto superior direito para que as correções entrem no ar e sumam da próxima varredura.
-
-## Posso seguir?
-Se aprovar, eu executo os passos 1–3 agora e depois te aviso para republicar e iniciar a conexão do Search Console.
+- Arquivo afetado: `src/routes/produtos.tsx`.
+- Trocar a inicialização do `useState<string[]>([])` + `useEffect` que abre tudo por:
+  - `useState` inicializado a partir de `localStorage.getItem(chave)` (lazy initializer).
+  - Um `useEffect` que grava `expandedCats` no `localStorage` sempre que mudar.
+  - Obter `userId` via `supabase.auth.getUser()` (ou do `AuthProvider` existente) para compor a chave; enquanto não houver user, usar chave anônima.
+- Tratamento defensivo: `try/catch` em volta do acesso ao `localStorage` (modo privado/SSR).
+- Nada precisa mudar no componente `Accordion` em si — ele já é controlado por `value` / `onValueChange`.

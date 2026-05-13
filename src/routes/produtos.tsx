@@ -18,6 +18,19 @@ import { ProdutoFormDialog } from "@/components/ProdutoFormDialog";
 import { CategoriasManagerDialog } from "@/components/CategoriasManagerDialog";
 import type { Produto, CategoriaProduto } from "@/store/types";
 import { toast } from "sonner";
+import { useAuth } from "@/components/AuthProvider";
+
+const STORAGE_PREFIX = "preciflow:produtos:categorias-abertas:";
+const readStored = (key: string): string[] | null => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : null;
+  } catch {
+    return null;
+  }
+};
 
 export const Route = createFileRoute("/produtos")({
   head: () => ({
@@ -42,13 +55,15 @@ function ProdutosPage() {
   const config = useConfigEfetiva();
   const deleteProduto = usePricingStore((s) => s.deleteProduto);
   const duplicateProduto = usePricingStore((s) => s.duplicateProduto);
+  const { user } = useAuth();
+  const storageKey = `${STORAGE_PREFIX}${user?.id ?? "anon"}`;
 
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [editing, setEditing] = useState<Produto | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [expandedCats, setExpandedCats] = useState<string[]>([]);
+  const [expandedCats, setExpandedCats] = useState<string[]>(() => readStored(`${STORAGE_PREFIX}${user?.id ?? "anon"}`) ?? []);
 
   const grupos = useMemo(() => {
     const filtered = produtos
@@ -92,13 +107,39 @@ function ProdutosPage() {
   const totalFiltrado = grupos.reduce((s, g) => s + g.itens.length, 0);
 
   const hasInitRef = useRef(false);
+  const lastUserRef = useRef<string | null>(user?.id ?? null);
+
+  // Reseta init quando o usuário troca (logout/login com outra conta)
+  useEffect(() => {
+    const current = user?.id ?? null;
+    if (lastUserRef.current !== current) {
+      lastUserRef.current = current;
+      hasInitRef.current = false;
+      const stored = readStored(`${STORAGE_PREFIX}${current ?? "anon"}`);
+      if (stored) {
+        setExpandedCats(stored);
+        hasInitRef.current = true;
+      }
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     if (!hasInitRef.current && grupos.length > 0) {
-      setExpandedCats(grupos.map((g) => g.cat.id));
+      const stored = readStored(storageKey);
+      setExpandedCats(stored ?? grupos.map((g) => g.cat.id));
       hasInitRef.current = true;
     }
-  }, [grupos]);
+  }, [grupos, storageKey]);
+
+  // Persiste sempre que o usuário muda o que está aberto
+  useEffect(() => {
+    if (!hasInitRef.current) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(expandedCats));
+    } catch {
+      // ignore
+    }
+  }, [expandedCats, storageKey]);
 
   return (
     <AppShell>
