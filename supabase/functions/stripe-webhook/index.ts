@@ -106,10 +106,12 @@ Deno.serve(async (req) => {
       }
       case "customer.subscription.updated": {
         const sub = event.data.object as Stripe.Subscription;
+        const novoStatus = mapStatus(sub.status);
         await supabase.from("assinaturas").update({
-          status: mapStatus(sub.status),
+          status: novoStatus,
           current_period_end: new Date((sub as any).current_period_end * 1000).toISOString(),
           plano: planoFromPriceId(sub.items.data[0]?.price.id),
+          ...(novoStatus === "ativo" ? { trial_ends_at: null } : {}),
         }).eq("stripe_subscription_id", sub.id);
         break;
       }
