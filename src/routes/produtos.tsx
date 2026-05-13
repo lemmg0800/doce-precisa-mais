@@ -107,13 +107,39 @@ function ProdutosPage() {
   const totalFiltrado = grupos.reduce((s, g) => s + g.itens.length, 0);
 
   const hasInitRef = useRef(false);
+  const lastUserRef = useRef<string | null>(user?.id ?? null);
+
+  // Reseta init quando o usuário troca (logout/login com outra conta)
+  useEffect(() => {
+    const current = user?.id ?? null;
+    if (lastUserRef.current !== current) {
+      lastUserRef.current = current;
+      hasInitRef.current = false;
+      const stored = readStored(`${STORAGE_PREFIX}${current ?? "anon"}`);
+      if (stored) {
+        setExpandedCats(stored);
+        hasInitRef.current = true;
+      }
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     if (!hasInitRef.current && grupos.length > 0) {
-      setExpandedCats(grupos.map((g) => g.cat.id));
+      const stored = readStored(storageKey);
+      setExpandedCats(stored ?? grupos.map((g) => g.cat.id));
       hasInitRef.current = true;
     }
-  }, [grupos]);
+  }, [grupos, storageKey]);
+
+  // Persiste sempre que o usuário muda o que está aberto
+  useEffect(() => {
+    if (!hasInitRef.current) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(expandedCats));
+    } catch {
+      // ignore
+    }
+  }, [expandedCats, storageKey]);
 
   return (
     <AppShell>
