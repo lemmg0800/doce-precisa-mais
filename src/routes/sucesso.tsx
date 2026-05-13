@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSubscription } from "@/hooks/useSubscription";
 
 export const Route = createFileRoute("/sucesso")({
   component: SucessoPage,
@@ -8,6 +10,12 @@ export const Route = createFileRoute("/sucesso")({
 });
 
 function SucessoPage() {
+  const { refresh } = useSubscription();
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center space-y-6">
