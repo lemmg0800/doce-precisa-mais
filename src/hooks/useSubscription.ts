@@ -94,7 +94,7 @@ export function useSubscription(): AccessInfo {
     const trialEnd = assinatura.trial_ends_at ? new Date(assinatura.trial_ends_at) : null;
     const periodEnd = assinatura.current_period_end ? new Date(assinatura.current_period_end) : null;
 
-    if (assinatura.status === "ativo" && periodEnd && periodEnd >= now) {
+    if (assinatura.status === "ativo" && (!periodEnd || periodEnd >= now)) {
       hasAccess = true;
       reason = "ativo";
     } else if (assinatura.status === "atrasado" && periodEnd) {
