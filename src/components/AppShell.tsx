@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-30 border-b bg-card/85 backdrop-blur supports-[backdrop-filter]:bg-card/70">
         <div className="mx-auto max-w-6xl flex items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Logo" className="h-9 w-9 rounded-full object-cover" />
+            <img src={logo} alt="Preciflow Logo" className="h-9 w-9 rounded-full object-cover" />
             <div className="leading-tight">
               <div className="font-display text-lg font-semibold">Preciflow</div>
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -55,6 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               onClick={() => supabase.auth.signOut()}
               className="ml-1 text-muted-foreground"
               title="Sair"
+              aria-label="Sair da conta"
             >
               <LogOut className="h-4 w-4" />
             </Button>

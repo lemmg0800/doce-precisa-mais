@@ -24,6 +24,14 @@ import { MateriaImportDialog } from "@/components/MateriaImportDialog";
 import type { MateriaPrima } from "@/store/types";
 
 export const Route = createFileRoute("/materias-primas")({
+  head: () => ({
+    meta: [
+      { title: "Ingredientes — Preciflow" },
+      { name: "description", content: "Gerencie ingredientes e insumos, atualize preços e mantenha seus custos sempre precisos." },
+      { property: "og:title", content: "Ingredientes — Preciflow" },
+      { property: "og:description", content: "Gerencie ingredientes e insumos, atualize preços e mantenha seus custos sempre precisos." },
+    ],
+  }),
   component: MateriasPage,
 });
 

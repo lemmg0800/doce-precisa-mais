@@ -1,0 +1,10 @@
+# Preciflow
+
+> Precificação inteligente para pequenos negócios de comida — confeitarias, hamburguerias, cafeterias, food trucks, açaiterias e produtores caseiros.
+
+Preciflow ajuda empreendedores do setor alimentício a calcular custos reais de produção, definir preços de venda com a margem desejada e organizar receitas, ingredientes, embalagens e kits — tudo no navegador, sem planilhas.
+
+## Pages
+- [Landing](/landing): apresentação do produto, planos e perguntas frequentes.
+- [Entrar / Criar conta](/auth): autenticação por email/senha ou Google.
+- [Assinatura](/assinatura): planos e checkout.
