@@ -1,0 +1,1 @@
+UPDATE public.assinaturas SET trial_ends_at = NULL WHERE status = 'ativo' AND trial_ends_at IS NOT NULL;
