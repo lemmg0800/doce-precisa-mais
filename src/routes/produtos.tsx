@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +48,7 @@ function ProdutosPage() {
   const [catOpen, setCatOpen] = useState(false);
   const [editing, setEditing] = useState<Produto | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [expandedCats, setExpandedCats] = useState<string[]>([]);
 
   const grupos = useMemo(() => {
     const filtered = produtos
@@ -89,6 +90,15 @@ function ProdutosPage() {
   }, [produtos, materias, config, kits, receitas, categorias, q]);
 
   const totalFiltrado = grupos.reduce((s, g) => s + g.itens.length, 0);
+
+  const hasInitRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasInitRef.current && grupos.length > 0) {
+      setExpandedCats(grupos.map((g) => g.cat.id));
+      hasInitRef.current = true;
+    }
+  }, [grupos]);
 
   return (
     <AppShell>
@@ -147,7 +157,8 @@ function ProdutosPage() {
         ) : (
           <Accordion
             type="multiple"
-            defaultValue={grupos.map((g) => g.cat.id)}
+            value={expandedCats}
+            onValueChange={setExpandedCats}
             className="space-y-3"
           >
             {grupos.map(({ cat, itens }) => (
