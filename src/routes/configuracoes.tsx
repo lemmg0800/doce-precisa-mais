@@ -278,10 +278,10 @@ function ConfigPage() {
                             <div className="col-span-4">
                               <CurrencyInput value={editValor} onChange={setEditValor} />
                             </div>
-                            <Button size="icon" variant="ghost" className="col-span-1" onClick={saveEdit}>
+                            <Button size="icon" variant="ghost" aria-label="Salvar gasto" className="col-span-1" onClick={saveEdit}>
                               <Check className="h-4 w-4 text-success" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="col-span-1" onClick={() => setEditingId(null)}>
+                            <Button size="icon" variant="ghost" aria-label="Cancelar edição" className="col-span-1" onClick={() => setEditingId(null)}>
                               <X className="h-4 w-4" />
                             </Button>
                           </>
@@ -289,11 +289,11 @@ function ConfigPage() {
                           <>
                             <span className="col-span-6 text-sm truncate">{g.nome_gasto}</span>
                             <span className="col-span-4 text-sm tabular-nums text-right">{brl(g.valor_mensal)}</span>
-                            <Button size="icon" variant="ghost" className="col-span-1" onClick={() => startEdit(g)}>
+                            <Button size="icon" variant="ghost" aria-label="Editar gasto" className="col-span-1" onClick={() => startEdit(g)}>
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
                             <Button
-                              size="icon" variant="ghost" className="col-span-1"
+                              size="icon" variant="ghost" aria-label="Remover gasto" className="col-span-1"
                               onClick={async () => { await deleteGasto(g.id); toast.success("Gasto removido."); }}
                             >
                               <Trash2 className="h-3.5 w-3.5 text-destructive" />

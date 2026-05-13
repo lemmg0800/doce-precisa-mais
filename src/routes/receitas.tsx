@@ -138,6 +138,7 @@ function ReceitasPage() {
                       </Button>
                       <Button
                         variant="ghost" size="sm"
+                        aria-label="Duplicar receita"
                         onClick={async () => {
                           await duplicateReceita(r.id);
                           toast.success("Receita duplicada.");
@@ -145,7 +146,7 @@ function ReceitasPage() {
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setConfirmId(r.id)}>
+                      <Button variant="ghost" size="sm" aria-label="Excluir receita" onClick={() => setConfirmId(r.id)}>
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>
                     </div>

@@ -266,6 +266,7 @@ export function ProdutoFormDialog({ open, onOpenChange, initial }: Props) {
                 type="button"
                 variant="outline"
                 size="icon"
+                aria-label="Editar categorias"
                 onClick={() => setCategoriasOpen(true)}
                 title="Editar categorias"
               >
@@ -419,6 +420,7 @@ export function ProdutoFormDialog({ open, onOpenChange, initial }: Props) {
                         type="button"
                         variant="ghost"
                         size="icon"
+                        aria-label="Remover ingrediente"
                         onClick={() =>
                           setForm((f) => ({
                             ...f,
@@ -546,6 +548,7 @@ export function ProdutoFormDialog({ open, onOpenChange, initial }: Props) {
                         type="button"
                         variant="ghost"
                         size="icon"
+                        aria-label="Remover receita"
                         onClick={() =>
                           setForm((f) => ({
                             ...f,
