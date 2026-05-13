@@ -93,7 +93,7 @@ function AssinaturaPage() {
         : "Continue usando o sistema sem limitações";
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
+    <main className="min-h-screen bg-background py-12 px-4">
       <div className="mx-auto max-w-5xl">
         <div className="mb-6">
           <Button asChild variant="ghost" size="sm">
@@ -176,6 +176,6 @@ function AssinaturaPage() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

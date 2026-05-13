@@ -9,7 +9,7 @@ export const Route = createFileRoute("/cancelado")({
 
 function CanceladoPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center space-y-6">
         <XCircle className="mx-auto h-16 w-16 text-destructive" />
         <h1 className="text-3xl font-bold">Pagamento cancelado</h1>
@@ -25,6 +25,6 @@ function CanceladoPage() {
           </Button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

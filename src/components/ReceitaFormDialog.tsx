@@ -295,6 +295,7 @@ export function ReceitaFormDialog({ open, onOpenChange, initial }: Props) {
                         type="button"
                         variant="ghost"
                         size="icon"
+                        aria-label="Remover ingrediente"
                         onClick={() =>
                           setForm((f) => ({
                             ...f,

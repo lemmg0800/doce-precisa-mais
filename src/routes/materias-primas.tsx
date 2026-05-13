@@ -106,6 +106,7 @@ function MateriasPage() {
                   <Button
                     size="icon"
                     variant="ghost"
+                    aria-label="Editar ingrediente"
                     onClick={() => {
                       setEditing(m);
                       setOpen(true);
@@ -116,6 +117,7 @@ function MateriasPage() {
                   <Button
                     size="icon"
                     variant="ghost"
+                    aria-label="Excluir ingrediente"
                     onClick={() => setConfirmId(m.id)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />

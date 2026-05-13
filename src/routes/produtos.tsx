@@ -271,6 +271,7 @@ function ProdutosPage() {
                             <Button
                               variant="ghost"
                               size="sm"
+                              aria-label="Duplicar produto"
                               onClick={async () => {
                                 await duplicateProduto(p.id);
                                 toast.success("Produto duplicado.");
@@ -281,6 +282,7 @@ function ProdutosPage() {
                             <Button
                               variant="ghost"
                               size="sm"
+                              aria-label="Excluir produto"
                               onClick={() => setConfirmId(p.id)}
                             >
                               <Trash2 className="h-3.5 w-3.5 text-destructive" />

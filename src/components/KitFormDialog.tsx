@@ -244,6 +244,7 @@ export function KitFormDialog({ open, onOpenChange, initial }: Props) {
                         type="button"
                         variant="ghost"
                         size="icon"
+                        aria-label="Remover item do kit"
                         onClick={() =>
                           setForm((f) => ({
                             ...f,

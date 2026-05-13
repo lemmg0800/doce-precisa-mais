@@ -150,6 +150,7 @@ export function CategoriasManagerDialog({ open, onOpenChange, onCreated }: Props
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label="Mover categoria para cima"
                       className="h-5 w-5"
                       onClick={() => move(idx, -1)}
                       disabled={idx === 0}
@@ -160,6 +161,7 @@ export function CategoriasManagerDialog({ open, onOpenChange, onCreated }: Props
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label="Mover categoria para baixo"
                       className="h-5 w-5"
                       onClick={() => move(idx, 1)}
                       disabled={idx === sorted.length - 1}
@@ -183,10 +185,10 @@ export function CategoriasManagerDialog({ open, onOpenChange, onCreated }: Props
                         className="flex-1"
                         autoFocus
                       />
-                      <Button size="icon" variant="ghost" onClick={saveEdit}>
+                      <Button size="icon" variant="ghost" aria-label="Salvar categoria" onClick={saveEdit}>
                         <Check className="h-4 w-4 text-success" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => setEditId(null)}>
+                      <Button size="icon" variant="ghost" aria-label="Cancelar edição" onClick={() => setEditId(null)}>
                         <X className="h-4 w-4" />
                       </Button>
                     </>
@@ -218,12 +220,13 @@ export function CategoriasManagerDialog({ open, onOpenChange, onCreated }: Props
                             )
                           }
                         />
-                        <Button size="icon" variant="ghost" onClick={() => startEdit(c)}>
+                        <Button size="icon" variant="ghost" aria-label="Editar categoria" onClick={() => startEdit(c)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                           size="icon"
                           variant="ghost"
+                          aria-label="Excluir categoria"
                           disabled={c.is_default}
                           onClick={() => handleDelete(c.id)}
                         >

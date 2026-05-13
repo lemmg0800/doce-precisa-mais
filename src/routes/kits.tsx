@@ -132,6 +132,7 @@ function KitsPage() {
                       </Button>
                       <Button
                         variant="ghost" size="sm"
+                        aria-label="Duplicar kit"
                         onClick={async () => {
                           await duplicateKit(k.id);
                           toast.success("Kit duplicado.");
@@ -139,7 +140,7 @@ function KitsPage() {
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setConfirmId(k.id)}>
+                      <Button variant="ghost" size="sm" aria-label="Excluir kit" onClick={() => setConfirmId(k.id)}>
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>
                     </div>
