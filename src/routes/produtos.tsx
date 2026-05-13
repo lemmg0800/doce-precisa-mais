@@ -18,6 +18,19 @@ import { ProdutoFormDialog } from "@/components/ProdutoFormDialog";
 import { CategoriasManagerDialog } from "@/components/CategoriasManagerDialog";
 import type { Produto, CategoriaProduto } from "@/store/types";
 import { toast } from "sonner";
+import { useAuth } from "@/components/AuthProvider";
+
+const STORAGE_PREFIX = "preciflow:produtos:categorias-abertas:";
+const readStored = (key: string): string[] | null => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : null;
+  } catch {
+    return null;
+  }
+};
 
 export const Route = createFileRoute("/produtos")({
   head: () => ({
