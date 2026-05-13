@@ -84,6 +84,7 @@ Deno.serve(async (req) => {
           status: "ativo",
           current_period_end: new Date((sub as any).current_period_end * 1000).toISOString(),
           plano: planoFromPriceId(sub.items.data[0]?.price.id),
+          trial_ends_at: null,
         }).eq("user_id", userId);
         break;
       }
