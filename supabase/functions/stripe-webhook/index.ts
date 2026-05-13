@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
             plano,
             status: "ativo",
             current_period_end: currentPeriodEnd,
+            trial_ends_at: null,
           },
           { onConflict: "user_id" },
         );
