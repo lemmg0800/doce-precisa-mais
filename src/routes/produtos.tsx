@@ -55,13 +55,15 @@ function ProdutosPage() {
   const config = useConfigEfetiva();
   const deleteProduto = usePricingStore((s) => s.deleteProduto);
   const duplicateProduto = usePricingStore((s) => s.duplicateProduto);
+  const { user } = useAuth();
+  const storageKey = `${STORAGE_PREFIX}${user?.id ?? "anon"}`;
 
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [editing, setEditing] = useState<Produto | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [expandedCats, setExpandedCats] = useState<string[]>([]);
+  const [expandedCats, setExpandedCats] = useState<string[]>(() => readStored(`${STORAGE_PREFIX}${user?.id ?? "anon"}`) ?? []);
 
   const grupos = useMemo(() => {
     const filtered = produtos
