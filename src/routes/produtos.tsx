@@ -48,6 +48,7 @@ function ProdutosPage() {
   const [catOpen, setCatOpen] = useState(false);
   const [editing, setEditing] = useState<Produto | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [expandedCats, setExpandedCats] = useState<string[]>([]);
 
   const grupos = useMemo(() => {
     const filtered = produtos
