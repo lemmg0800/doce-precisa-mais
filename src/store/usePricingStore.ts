@@ -793,25 +793,35 @@ function custoItem(
   return custoUnitarioBase(m) * qtdNaBase;
 }
 
+/** Arredonda para 2 casas decimais (HALF_UP). */
+function round2(n: number): number {
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n * 100) / 100;
+}
+
 export function custoTotalKit(kit: KitEmbalagem, materias: MateriaPrima[]): number {
-  return kit.itens.reduce((sum, item) => {
-    const m = materias.find((x) => x.id === item.materia_prima_id);
-    if (!m) return sum;
-    return sum + custoItem(m, item.quantidade_utilizada, item.unidade_utilizada);
-  }, 0);
+  return round2(
+    kit.itens.reduce((sum, item) => {
+      const m = materias.find((x) => x.id === item.materia_prima_id);
+      if (!m) return sum;
+      return sum + custoItem(m, item.quantidade_utilizada, item.unidade_utilizada);
+    }, 0),
+  );
 }
 
 export function custoTotalReceita(receita: Receita, materias: MateriaPrima[]): number {
-  return receita.itens.reduce((sum, item) => {
-    const m = materias.find((x) => x.id === item.materia_prima_id);
-    if (!m) return sum;
-    return sum + custoItem(m, item.quantidade_utilizada, item.unidade_utilizada);
-  }, 0);
+  return round2(
+    receita.itens.reduce((sum, item) => {
+      const m = materias.find((x) => x.id === item.materia_prima_id);
+      if (!m) return sum;
+      return sum + custoItem(m, item.quantidade_utilizada, item.unidade_utilizada);
+    }, 0),
+  );
 }
 
 export function custoUnitarioReceita(receita: Receita, materias: MateriaPrima[]): number {
   const total = custoTotalReceita(receita, materias);
-  return receita.rendimento > 0 ? total / receita.rendimento : 0;
+  return receita.rendimento > 0 ? round2(total / receita.rendimento) : 0;
 }
 
 function arredondar(v: number, tipo: TipoArredondamento): number {
