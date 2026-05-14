@@ -256,8 +256,7 @@ function ProdutosPage() {
                               {p.receitas!.map((pr) => {
                                 const r = receitas.find((x) => x.id === pr.receita_id);
                                 if (!r) return null;
-                                const custoInteira = custoUnitarioReceita(r, materias) * (r.rendimento || 0);
-                                const custoTotal = custoInteira * (pr.quantidade_utilizada || 0);
+                                const custoTotal = custoUnitarioReceita(r, materias) * (pr.quantidade_utilizada || 0);
                                 return (
                                   <div key={pr.id} className="flex items-center justify-between text-xs">
                                     <span className="truncate">

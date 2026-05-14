@@ -1,34 +1,44 @@
 ## Problema
 
-Hoje o sistema mostra os custos arredondados para 2 casas (ex.: custo do kit "0,29"), mas internamente trabalha com o valor completo (ex.: 0,2860). Quando o produto multiplica `custo_kit × rendimento` (8 kits), o cálculo usa 0,2860 × 8 = 2,288 → exibe 2,29, em vez do esperado 8 × 0,29 = 2,32.
+No card de cada produto na aba **Produtos**, quando há receita reutilizável vinculada, o valor exibido ao lado do nome da receita está absurdamente alto.
 
-## Solução
+Exemplo do usuário:
+- Receita "Massa podre": custo total R$ 7,78 / rendimento 900 g → R$ 0,00864 por g
+- Produto "Empadinha" usa 350 g dessa receita
+- Esperado: ~R$ 3,03 (ou ~R$ 3,50 considerando arredondamento por grama)
+- Exibido: **R$ 3.150,00**
 
-Arredondar para 2 casas (HALF_UP) os valores de custo no momento em que são calculados, para que os cálculos seguintes usem exatamente o mesmo número que aparece na tela.
+## Causa
 
-## Onde aplicar
+Em `src/routes/produtos.tsx`, linhas 259–260:
 
-Em `src/store/usePricingStore.ts`:
+```ts
+const custoInteira = custoUnitarioReceita(r, materias) * (r.rendimento || 0);
+const custoTotal   = custoInteira * (pr.quantidade_utilizada || 0);
+```
 
-1. Criar helper `round2(n)` que arredonda para 2 casas (HALF_UP, ex.: `Math.round(n * 100) / 100`).
-2. Aplicar `round2` no retorno das funções base:
-   - `custoTotalKit` → custo final do kit
-   - `custoTotalReceita` → custo total da receita
-   - `custoUnitarioReceita` → custo por g/ml/un
-3. Em `calcularProduto`, arredondar para 2 casas:
-   - `custo_total_receita` (ingredientes diretos)
-   - `custo_total_receitas_reutilizaveis`
-   - `custo_receita_ajustado` (após perda)
-   - `custo_unitario_produto` (custo por unidade)
-   - `custo_kit` e `custo_kit_total` (kit × rendimento — esse é o caso do bug)
-   - `custo_mao_obra`
-   - `preco_minimo` e `preco_sugerido` (depois aplicar o arredondamento de preço já existente, se configurado)
-   - `lucro_unitario`, `lucro_teorico`, `lucro_unitario_real`, `diferenca_para_ideal`
+Isso multiplica o custo unitário pelo **rendimento da receita** (gerando o custo total da receita inteira) e depois multiplica de novo pela **quantidade usada no produto**. Resultado: `custo_unit × rendimento × quantidade` em vez de `custo_unit × quantidade`.
 
-## Resultado
+Com arredondamento (round2 do `custoUnitarioReceita`):
+0,01 × 900 × 350 = **3.150** ← bate exatamente com o que aparece na tela.
 
-8 kits de R$ 0,29 passam a somar exatamente R$ 2,32. Todos os totais exibidos passam a bater com a soma manual dos valores que aparecem na interface.
+O cálculo dentro de `calcularProduto` (store, linha ~857) já está correto: `custoUnitarioReceita(r) × pr.quantidade_utilizada`. O bug existe apenas na exibição do detalhe da receita no card.
+
+## Correção
+
+Em `src/routes/produtos.tsx`, substituir as duas linhas por:
+
+```ts
+const custoTotal = custoUnitarioReceita(r, materias) * (pr.quantidade_utilizada || 0);
+```
+
+Remover a variável `custoInteira` (não é usada em mais nenhum lugar).
 
 ## Escopo
 
-Apenas `src/store/usePricingStore.ts`. Sem alterações de UI, schema ou banco. Configuração de arredondamento de preço final (0,10 / 0,50 / 1,00) continua funcionando como está.
+- Apenas `src/routes/produtos.tsx`.
+- Sem mudanças em store, schema, banco ou no `calcularProduto` (que já está correto, então o "Custo" total do produto, "Mínimo" e "Sugerido" do card já estavam certos — o bug era só o número ao lado do nome da receita).
+
+## Resultado esperado
+
+Para 350 g da massa podre: passa a exibir ~R$ 3,50 (com o arredondamento por grama atual), batendo com o que entra na composição do custo do produto.
