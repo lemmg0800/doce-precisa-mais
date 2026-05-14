@@ -793,25 +793,35 @@ function custoItem(
   return custoUnitarioBase(m) * qtdNaBase;
 }
 
+/** Arredonda para 2 casas decimais (HALF_UP). */
+function round2(n: number): number {
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n * 100) / 100;
+}
+
 export function custoTotalKit(kit: KitEmbalagem, materias: MateriaPrima[]): number {
-  return kit.itens.reduce((sum, item) => {
-    const m = materias.find((x) => x.id === item.materia_prima_id);
-    if (!m) return sum;
-    return sum + custoItem(m, item.quantidade_utilizada, item.unidade_utilizada);
-  }, 0);
+  return round2(
+    kit.itens.reduce((sum, item) => {
+      const m = materias.find((x) => x.id === item.materia_prima_id);
+      if (!m) return sum;
+      return sum + custoItem(m, item.quantidade_utilizada, item.unidade_utilizada);
+    }, 0),
+  );
 }
 
 export function custoTotalReceita(receita: Receita, materias: MateriaPrima[]): number {
-  return receita.itens.reduce((sum, item) => {
-    const m = materias.find((x) => x.id === item.materia_prima_id);
-    if (!m) return sum;
-    return sum + custoItem(m, item.quantidade_utilizada, item.unidade_utilizada);
-  }, 0);
+  return round2(
+    receita.itens.reduce((sum, item) => {
+      const m = materias.find((x) => x.id === item.materia_prima_id);
+      if (!m) return sum;
+      return sum + custoItem(m, item.quantidade_utilizada, item.unidade_utilizada);
+    }, 0),
+  );
 }
 
 export function custoUnitarioReceita(receita: Receita, materias: MateriaPrima[]): number {
   const total = custoTotalReceita(receita, materias);
-  return receita.rendimento > 0 ? total / receita.rendimento : 0;
+  return receita.rendimento > 0 ? round2(total / receita.rendimento) : 0;
 }
 
 function arredondar(v: number, tipo: TipoArredondamento): number {
@@ -831,47 +841,52 @@ export function calcularProduto(
   kits: KitEmbalagem[] = [],
   receitas: Receita[] = [],
 ): ProdutoCalculos {
-  const custo_total_receita = produto.itens.reduce((sum, item) => {
-    const m = materias.find((x) => x.id === item.materia_prima_id);
-    if (!m) return sum;
-    return sum + custoItem(m, item.quantidade_utilizada, item.unidade_utilizada);
-  }, 0);
+  const custo_total_receita = round2(
+    produto.itens.reduce((sum, item) => {
+      const m = materias.find((x) => x.id === item.materia_prima_id);
+      if (!m) return sum;
+      return sum + custoItem(m, item.quantidade_utilizada, item.unidade_utilizada);
+    }, 0),
+  );
 
   // Custo das receitas reutilizáveis usadas no produto
-  const custo_total_receitas_reutilizaveis = (produto.receitas ?? []).reduce((sum, pr) => {
-    const r = receitas.find((x) => x.id === pr.receita_id);
-    if (!r) return sum;
-    // quantidade_utilizada agora representa a quantidade na unidade do rendimento da receita (ex: gramas)
-    return sum + custoUnitarioReceita(r, materias) * (pr.quantidade_utilizada || 0);
-  }, 0);
+  const custo_total_receitas_reutilizaveis = round2(
+    (produto.receitas ?? []).reduce((sum, pr) => {
+      const r = receitas.find((x) => x.id === pr.receita_id);
+      if (!r) return sum;
+      return sum + custoUnitarioReceita(r, materias) * (pr.quantidade_utilizada || 0);
+    }, 0),
+  );
 
-  const custo_total_combinado = custo_total_receita + custo_total_receitas_reutilizaveis;
+  const custo_total_combinado = round2(custo_total_receita + custo_total_receitas_reutilizaveis);
 
-  const custo_receita_ajustado =
-    custo_total_combinado * (1 + (produto.percentual_perda || 0) / 100);
+  const custo_receita_ajustado = round2(
+    custo_total_combinado * (1 + (produto.percentual_perda || 0) / 100),
+  );
 
   let custo_unitario_produto =
-    produto.rendimento > 0 ? custo_receita_ajustado / produto.rendimento : 0;
+    produto.rendimento > 0 ? round2(custo_receita_ajustado / produto.rendimento) : 0;
 
   // Kit (1 kit por unidade produzida)
   const kit = produto.kit_embalagem_id
     ? kits.find((k) => k.id === produto.kit_embalagem_id)
     : null;
-  const custo_kit = kit ? custoTotalKit(kit, materias) : 0;
-  const custo_kit_total = custo_kit * (produto.rendimento || 0);
-  custo_unitario_produto += custo_kit;
+  const custo_kit = kit ? round2(custoTotalKit(kit, materias)) : 0;
+  const custo_kit_total = round2(custo_kit * (produto.rendimento || 0));
+  custo_unitario_produto = round2(custo_unitario_produto + custo_kit);
 
   // Mão de obra (por unidade do rendimento)
   const tempo = produto.tempo_producao_minutos || 0;
   const custo_mao_obra_total = (tempo / 60) * (config.valor_hora_trabalho || 0);
   const custo_mao_obra =
-    produto.rendimento > 0 ? custo_mao_obra_total / produto.rendimento : 0;
-  custo_unitario_produto += custo_mao_obra;
+    produto.rendimento > 0 ? round2(custo_mao_obra_total / produto.rendimento) : 0;
+  custo_unitario_produto = round2(custo_unitario_produto + custo_mao_obra);
 
-  let preco_minimo = custo_unitario_produto * (1 + config.percentual_custo_fixo / 100);
-  let preco_sugerido =
+  let preco_minimo = round2(custo_unitario_produto * (1 + config.percentual_custo_fixo / 100));
+  let preco_sugerido = round2(
     custo_unitario_produto *
-    (1 + config.percentual_custo_fixo / 100 + config.percentual_lucro / 100);
+      (1 + config.percentual_custo_fixo / 100 + config.percentual_lucro / 100),
+  );
 
   preco_minimo = arredondar(preco_minimo, config.tipo_arredondamento_preco);
   preco_sugerido = arredondar(preco_sugerido, config.tipo_arredondamento_preco);
@@ -882,10 +897,10 @@ export function calcularProduto(
     ? (produto.preco_praticado as number)
     : preco_sugerido;
 
-  const lucro_unitario = preco_efetivo - preco_minimo;
+  const lucro_unitario = round2(preco_efetivo - preco_minimo);
   const percentual_lucro =
     preco_minimo > 0 ? (lucro_unitario / preco_minimo) * 100 : 0;
-  const lucro_teorico = preco_sugerido - preco_minimo;
+  const lucro_teorico = round2(preco_sugerido - preco_minimo);
 
   let lucro_unitario_real: number | null = null;
   let percentual_lucro_real: number | null = null;
@@ -893,10 +908,10 @@ export function calcularProduto(
   let insight: InsightTipo = "sem_preco";
 
   if (usando_preco_real) {
-    lucro_unitario_real = (produto.preco_praticado as number) - preco_minimo;
+    lucro_unitario_real = round2((produto.preco_praticado as number) - preco_minimo);
     percentual_lucro_real =
       preco_minimo > 0 ? (lucro_unitario_real / preco_minimo) * 100 : 0;
-    diferenca_para_ideal = preco_sugerido - (produto.preco_praticado as number);
+    diferenca_para_ideal = round2(preco_sugerido - (produto.preco_praticado as number));
     if ((produto.preco_praticado as number) < preco_sugerido) insight = "abaixo";
     else if ((produto.preco_praticado as number) > preco_sugerido) insight = "acima";
     else insight = "ideal";
