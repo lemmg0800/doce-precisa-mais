@@ -320,8 +320,12 @@ export default function ProdutosPage() {
                               size="sm"
                               aria-label="Duplicar produto"
                               onClick={async () => {
-                                await duplicateProduto(p.id);
+                                const newId = await duplicateProduto(p.id);
                                 toast.success("Produto duplicado.");
+                                if (newId) {
+                                  const novo = usePricingStore.getState().produtos.find((x) => x.id === newId);
+                                  if (novo) { setEditing(novo); setOpen(true); }
+                                }
                               }}
                             >
                               <Copy className="h-3.5 w-3.5" />
