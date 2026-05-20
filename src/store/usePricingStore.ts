@@ -498,8 +498,8 @@ export const usePricingStore = create<State>()((set, get) => ({
   },
   duplicateReceita: async (id) => {
     const orig = get().receitas.find((r) => r.id === id);
-    if (!orig) return;
-    await get().addReceita({
+    if (!orig) return null;
+    return await get().addReceita({
       nome_receita: `${orig.nome_receita} (cópia)`,
       rendimento: orig.rendimento,
       unidade_rendimento: orig.unidade_rendimento,
@@ -510,6 +510,7 @@ export const usePricingStore = create<State>()((set, get) => ({
       })),
     });
   },
+
 
   // ===== categorias =====
   addCategoria: async (c) => {
