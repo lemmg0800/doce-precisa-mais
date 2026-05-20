@@ -1,44 +1,74 @@
-## Problema
+## Plano: Migrar de TanStack Router para React Router (compatível com a stack Vite React da Lovable)
 
-No card de cada produto na aba **Produtos**, quando há receita reutilizável vinculada, o valor exibido ao lado do nome da receita está absurdamente alto.
+A equipe de deploy identificou que o uso do TanStack Router (com roteamento baseado em arquivos e `routeTree.gen.ts`) entra em conflito com a forma como a Lovable faz deploy de apps Vite React, fazendo as rotas profundas voltarem a dar "not found" a cada novo deploy. A solução é trocar pelo `react-router-dom`, padrão da stack.
 
-Exemplo do usuário:
-- Receita "Massa podre": custo total R$ 7,78 / rendimento 900 g → R$ 0,00864 por g
-- Produto "Empadinha" usa 350 g dessa receita
-- Esperado: ~R$ 3,03 (ou ~R$ 3,50 considerando arredondamento por grama)
-- Exibido: **R$ 3.150,00**
+### O que vai mudar
 
-## Causa
+**Dependências**
+- Adicionar: `react-router-dom`
+- Remover: `@tanstack/react-router`, `@tanstack/router-plugin`
 
-Em `src/routes/produtos.tsx`, linhas 259–260:
+**Arquivos de configuração**
+- `vite.config.ts` — remover o plugin `TanStackRouterVite(...)`.
+- `wrangler.jsonc` — remover (não é usado pela hospedagem Lovable; sua presença é parte do que confunde o deploy).
+- `public/_redirects` — remover (a Lovable já faz fallback SPA automaticamente).
+- `src/routeTree.gen.ts` — deletar.
+- `src/router.tsx` — substituir por um `createBrowserRouter` simples (ou usar `<BrowserRouter>` direto em `main.tsx`).
+- `src/main.tsx` — montar `<BrowserRouter>` / `<RouterProvider>` do `react-router-dom`.
 
-```ts
-const custoInteira = custoUnitarioReceita(r, materias) * (r.rendimento || 0);
-const custoTotal   = custoInteira * (pr.quantidade_utilizada || 0);
-```
+**Rotas (todos os arquivos em `src/routes/`)**
+Cada arquivo hoje exporta `Route = createFileRoute(...)({ component, head })`. Vou converter para componentes React puros e centralizar o mapeamento de rotas + `<meta>`/`<title>` em um único lugar:
 
-Isso multiplica o custo unitário pelo **rendimento da receita** (gerando o custo total da receita inteira) e depois multiplica de novo pela **quantidade usada no produto**. Resultado: `custo_unit × rendimento × quantidade` em vez de `custo_unit × quantidade`.
+- Manter os arquivos `src/routes/*.tsx` exportando apenas o componente da página (sem `createFileRoute`, sem `head`).
+- Criar `src/routes/index.tsx` (rota `/`), `auth`, `assinatura`, `sucesso`, `cancelado`, `landing`, `configuracoes`, `kits`, `materias-primas`, `produtos`, `receitas` como `<Route>` no novo router.
+- Criar um pequeno helper `usePageMeta({ title, description })` para preservar o SEO que hoje vive em `head()` (atualiza `document.title` e meta tags via `useEffect`).
+- Converter `__root.tsx` em um `RootLayout` que renderiza `<AuthProvider>` + `<AuthGate>` + `<Outlet />` do react-router-dom, e o `NotFoundComponent` vira a rota catch-all `path="*"`.
 
-Com arredondamento (round2 do `custoUnitarioReceita`):
-0,01 × 900 × 350 = **3.150** ← bate exatamente com o que aparece na tela.
+**Imports a trocar em todo o projeto** (arquivos afetados: `AccessGate.tsx`, `AppShell.tsx`, `useSubscription.ts`, e todas as páginas em `src/routes/`):
+- `import { Link } from "@tanstack/react-router"` → `import { Link } from "react-router-dom"` (e `to="/x"` continua igual; trocar `<Link to="/x">` continua válido).
+- `useNavigate()` — API equivalente; trocar `navigate({ to: "/x" })` por `navigate("/x")`.
+- `useLocation()` — mesma forma de uso (`loc.pathname`), só muda o import.
+- `useRouter().invalidate()` (em `src/router.tsx` error component) — remover, usar `window.location.reload()` ou `navigate(0)`.
 
-O cálculo dentro de `calcularProduto` (store, linha ~857) já está correto: `custoUnitarioReceita(r) × pr.quantidade_utilizada`. O bug existe apenas na exibição do detalhe da receita no card.
+**SEO / `<head>`**
+Cada rota hoje define `head()` com `<title>` e meta tags. Vou preservar isso via o helper `usePageMeta` chamado no topo de cada página, mantendo os mesmos títulos e descrições atuais. (Se preferir, posso instalar `react-helmet-async` — mas o helper manual é mais leve e suficiente.)
 
-## Correção
+### Comportamento esperado após a migração
 
-Em `src/routes/produtos.tsx`, substituir as duas linhas por:
+- Mesmas URLs, mesmas páginas, mesmo visual.
+- `/produtos`, `/receitas`, etc. continuam funcionando ao recarregar e em links diretos — a Lovable serve `index.html` automaticamente como fallback SPA.
+- Deploys futuros não vão mais ser "misread" pela infra, porque o projeto vira um Vite + React Router padrão.
 
-```ts
-const custoTotal = custoUnitarioReceita(r, materias) * (pr.quantidade_utilizada || 0);
-```
+### Detalhes técnicos
 
-Remover a variável `custoInteira` (não é usada em mais nenhum lugar).
+- Estrutura final do router (resumo):
+  ```text
+  <BrowserRouter>
+    <AuthProvider>
+      <Routes>
+        <Route element={<AuthGate />}>        // gate + AccessGate
+          <Route path="/" element={<Index />} />
+          <Route path="/produtos" element={<Produtos />} />
+          ...rotas protegidas
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/landing" element={<Landing />} />
+          <Route path="/assinatura" element={<Assinatura />} />
+          <Route path="/sucesso" element={<Sucesso />} />
+          <Route path="/cancelado" element={<Cancelado />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </AuthProvider>
+    <Toaster />
+  </BrowserRouter>
+  ```
+- O `AuthGate` decide entre `<Outlet />` direto (rotas públicas / não logado) e `<AccessGate><Outlet /></AccessGate>` (rotas privadas autenticadas), mantendo a mesma lógica atual.
+- Nenhuma alteração em `usePricingStore`, Supabase, cálculos de produtos/receitas/kits, ou edge functions. Apenas roteamento e SEO de página.
 
-## Escopo
+### O que NÃO vou mexer
 
-- Apenas `src/routes/produtos.tsx`.
-- Sem mudanças em store, schema, banco ou no `calcularProduto` (que já está correto, então o "Custo" total do produto, "Mínimo" e "Sugerido" do card já estavam certos — o bug era só o número ao lado do nome da receita).
+- Lógica de negócio (preços, receitas, kits, materiais).
+- Supabase / Lovable Cloud / edge functions.
+- Design, componentes UI, Tailwind, store Zustand.
 
-## Resultado esperado
-
-Para 350 g da massa podre: passa a exibir ~R$ 3,50 (com o arredondamento por grama atual), batendo com o que entra na composição do custo do produto.
+Posso seguir com a migração?
