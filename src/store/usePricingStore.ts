@@ -48,16 +48,16 @@ interface State {
   duplicateKit: (id: string) => Promise<void>;
 
   // receitas
-  addReceita: (r: Omit<Receita, "id" | "itens"> & { itens: Omit<ReceitaItem, "id">[] }) => Promise<void>;
+  addReceita: (r: Omit<Receita, "id" | "itens"> & { itens: Omit<ReceitaItem, "id">[] }) => Promise<string>;
   updateReceita: (id: string, r: Omit<Receita, "id" | "itens"> & { itens: Omit<ReceitaItem, "id">[] }) => Promise<void>;
   deleteReceita: (id: string) => Promise<void>;
-  duplicateReceita: (id: string) => Promise<void>;
+  duplicateReceita: (id: string) => Promise<string | null>;
 
   // produtos
-  addProduto: (p: Omit<Produto, "id" | "itens" | "receitas"> & { itens: Omit<ItemReceita, "id">[]; receitas?: Omit<ProdutoReceita, "id">[] }) => Promise<void>;
+  addProduto: (p: Omit<Produto, "id" | "itens" | "receitas"> & { itens: Omit<ItemReceita, "id">[]; receitas?: Omit<ProdutoReceita, "id">[] }) => Promise<string>;
   updateProduto: (id: string, p: Omit<Produto, "id" | "itens" | "receitas"> & { itens: Omit<ItemReceita, "id">[]; receitas?: Omit<ProdutoReceita, "id">[] }) => Promise<void>;
   deleteProduto: (id: string) => Promise<void>;
-  duplicateProduto: (id: string) => Promise<void>;
+  duplicateProduto: (id: string) => Promise<string | null>;
 
   // categorias
   addCategoria: (c: Omit<CategoriaProduto, "id" | "is_default" | "ordem_exibicao"> & { ordem_exibicao?: number }) => Promise<CategoriaProduto>;
