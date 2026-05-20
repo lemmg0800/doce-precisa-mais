@@ -136,8 +136,12 @@ export default function ReceitasPage() {
                         variant="ghost" size="sm"
                         aria-label="Duplicar receita"
                         onClick={async () => {
-                          await duplicateReceita(r.id);
+                          const newId = await duplicateReceita(r.id);
                           toast.success("Receita duplicada.");
+                          if (newId) {
+                            const novo = usePricingStore.getState().receitas.find((x) => x.id === newId);
+                            if (novo) { setEditing(novo); setOpen(true); }
+                          }
                         }}
                       >
                         <Copy className="h-3.5 w-3.5" />
