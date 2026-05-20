@@ -1,15 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
+import { usePageMeta } from "@/lib/usePageMeta";
 
-export const Route = createFileRoute("/sucesso")({
-  component: SucessoPage,
-  head: () => ({ meta: [{ title: "Pagamento aprovado" }] }),
-});
+export default function SucessoPage() {
+  usePageMeta({ title: "Pagamento aprovado" });
+  return <SucessoPageInner />;
+}
 
-function SucessoPage() {
+function SucessoPageInner() {
   const { refresh } = useSubscription();
 
   useEffect(() => {

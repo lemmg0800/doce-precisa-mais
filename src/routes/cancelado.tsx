@@ -1,13 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePageMeta } from "@/lib/usePageMeta";
 
-export const Route = createFileRoute("/cancelado")({
-  component: CanceladoPage,
-  head: () => ({ meta: [{ title: "Pagamento cancelado" }] }),
-});
-
-function CanceladoPage() {
+export default function CanceladoPage() {
+  usePageMeta({ title: "Pagamento cancelado" });
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center space-y-6">

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,13 +13,9 @@ import {
   Award, AlertTriangle, BadgeCheck, Tag, SquareStack, Layers
 } from "lucide-react";
 
-export const Route = createFileRoute("/")({
-  component: Home,
-});
-
 type EnrichedProduto = { p: Produto; calc: ProdutoCalculos };
 
-function Home() {
+export default function Home() {
   const materias = usePricingStore((s) => s.materias);
   const produtos = usePricingStore((s) => s.produtos);
   const kits = usePricingStore((s) => s.kits);

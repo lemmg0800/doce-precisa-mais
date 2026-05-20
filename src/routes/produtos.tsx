@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,21 +32,17 @@ const readStored = (key: string): string[] | null => {
   }
 };
 
-export const Route = createFileRoute("/produtos")({
-  head: () => ({
-    meta: [
-      { title: "Produtos — Preciflow" },
-      { name: "description", content: "Cadastre produtos, calcule custos e defina o preço de venda com a margem desejada." },
-      { property: "og:title", content: "Produtos — Preciflow" },
-      { property: "og:description", content: "Cadastre produtos, calcule custos e defina o preço de venda com a margem desejada." },
-    ],
-  }),
-  component: ProdutosPage,
-});
+import { usePageMeta } from "@/lib/usePageMeta";
 
 const SEM_CAT_KEY = "__sem_categoria__";
 
-function ProdutosPage() {
+export default function ProdutosPage() {
+  usePageMeta({
+    title: "Produtos — Preciflow",
+    description: "Cadastre produtos, calcule custos e defina o preço de venda com a margem desejada.",
+    ogTitle: "Produtos — Preciflow",
+    ogDescription: "Cadastre produtos, calcule custos e defina o preço de venda com a margem desejada.",
+  });
   const produtos = usePricingStore((s) => s.produtos);
   const materias = usePricingStore((s) => s.materias);
   const categorias = usePricingStore((s) => s.categorias);

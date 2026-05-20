@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useLocation } from "@tanstack/react-router";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 
