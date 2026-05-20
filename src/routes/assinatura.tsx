@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,21 +7,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Lock, Sparkles, ShieldCheck, ArrowLeft } from "lucide-react";
-import { Link } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/assinatura")({
-  component: AssinaturaPage,
-  head: () => ({
-    meta: [
-      { title: "Continue usando — escolha seu plano" },
-      {
-        name: "description",
-        content:
-          "Continue precificando com segurança. Escolha o plano que melhor se encaixa no seu negócio.",
-      },
-    ],
-  }),
-});
+import { usePageMeta } from "@/lib/usePageMeta";
 
 const PLANOS = [
   {
@@ -59,7 +45,11 @@ const PLANOS = [
   },
 ];
 
-function AssinaturaPage() {
+export default function AssinaturaPage() {
+  usePageMeta({
+    title: "Continue usando — escolha seu plano",
+    description: "Continue precificando com segurança. Escolha o plano que melhor se encaixa no seu negócio.",
+  });
   const { user, ready } = useAuth();
   const { reason, trialDaysLeft } = useSubscription();
   const navigate = useNavigate();
@@ -68,7 +58,7 @@ function AssinaturaPage() {
   async function assinar(plano: string) {
     if (!ready) return;
     if (!user) {
-      navigate({ to: "/auth" });
+      navigate("/auth");
       return;
     }
     setLoading(plano);
