@@ -1,12 +1,24 @@
-import { Outlet, Link, createRootRoute, useLocation, useNavigate } from "@tanstack/react-router";
+import { BrowserRouter, Routes, Route, Outlet, useLocation, useNavigate, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import { AccessGate } from "@/components/AccessGate";
 
+import IndexPage from "@/routes/index";
+import AuthPage from "@/routes/auth";
+import AssinaturaPage from "@/routes/assinatura";
+import SucessoPage from "@/routes/sucesso";
+import CanceladoPage from "@/routes/cancelado";
+import LandingPage from "@/routes/landing";
+import ConfiguracoesPage from "@/routes/configuracoes";
+import KitsPage from "@/routes/kits";
+import MateriasPrimasPage from "@/routes/materias-primas";
+import ProdutosPage from "@/routes/produtos";
+import ReceitasPage from "@/routes/receitas";
+
 const PUBLIC_PATHS = ["/auth", "/assinatura", "/sucesso", "/cancelado", "/landing"];
 
-function NotFoundComponent() {
+function NotFoundPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -28,22 +40,6 @@ function NotFoundComponent() {
   );
 }
 
-export const Route = createRootRoute({
-  component: RootComponent,
-  notFoundComponent: NotFoundComponent,
-});
-
-function RootComponent() {
-  return (
-    <>
-      <AuthProvider>
-        <AuthGate />
-      </AuthProvider>
-      <Toaster position="top-center" richColors />
-    </>
-  );
-}
-
 function AuthGate() {
   const { ready, session } = useAuth();
   const loc = useLocation();
@@ -52,7 +48,7 @@ function AuthGate() {
   useEffect(() => {
     if (!ready) return;
     if (!session && !PUBLIC_PATHS.includes(loc.pathname)) {
-      navigate({ to: "/auth" });
+      navigate("/auth");
     }
   }, [ready, session, loc.pathname, navigate]);
 
@@ -70,5 +66,31 @@ function AuthGate() {
     <AccessGate>
       <Outlet />
     </AccessGate>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route element={<AuthGate />}>
+            <Route path="/" element={<IndexPage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/assinatura" element={<AssinaturaPage />} />
+            <Route path="/sucesso" element={<SucessoPage />} />
+            <Route path="/cancelado" element={<CanceladoPage />} />
+            <Route path="/landing" element={<LandingPage />} />
+            <Route path="/configuracoes" element={<ConfiguracoesPage />} />
+            <Route path="/kits" element={<KitsPage />} />
+            <Route path="/materias-primas" element={<MateriasPrimasPage />} />
+            <Route path="/produtos" element={<ProdutosPage />} />
+            <Route path="/receitas" element={<ReceitasPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
+      <Toaster position="top-center" richColors />
+    </BrowserRouter>
   );
 }
