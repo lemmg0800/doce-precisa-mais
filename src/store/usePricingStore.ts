@@ -419,8 +419,8 @@ export const usePricingStore = create<State>()((set, get) => ({
   },
   duplicateProduto: async (id) => {
     const orig = get().produtos.find((p) => p.id === id);
-    if (!orig) return;
-    await get().addProduto({
+    if (!orig) return null;
+    return await get().addProduto({
       nome_produto: `${orig.nome_produto} (cópia)`,
       rendimento: orig.rendimento,
       percentual_perda: orig.percentual_perda,
