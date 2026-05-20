@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ChefHat, Package, Settings, LayoutDashboard, Box, LogOut, BookOpen, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
