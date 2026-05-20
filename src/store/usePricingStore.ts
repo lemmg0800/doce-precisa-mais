@@ -378,6 +378,7 @@ export const usePricingStore = create<State>()((set, get) => ({
       if (e3) throw e3;
     }
     await get().loadAll();
+    return data.id as string;
   },
   updateProduto: async (id, p) => {
     const { error } = await supabase
