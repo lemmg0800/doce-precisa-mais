@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,10 +10,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
 import { Check, Mail } from "lucide-react";
 import logo from "@/assets/logo.png";
-
-export const Route = createFileRoute("/auth")({
-  component: AuthPage,
-});
 
 function translateAuthError(msg: string, code?: string): string {
   const m = msg.toLowerCase();
@@ -34,7 +30,7 @@ function translateAuthError(msg: string, code?: string): string {
   return msg;
 }
 
-function AuthPage() {
+export default function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,7 +40,7 @@ function AuthPage() {
   const { session, ready } = useAuth();
 
   useEffect(() => {
-    if (ready && session) navigate({ to: "/" });
+    if (ready && session) navigate("/");
   }, [ready, session, navigate]);
 
   const resendConfirmation = async (targetEmail: string) => {
@@ -78,7 +74,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Bem-vindo(a)!");
-        navigate({ to: "/" });
+        navigate("/");
       }
     } catch (err: unknown) {
       const rawMsg = err instanceof Error ? err.message : "Erro";
@@ -108,7 +104,7 @@ function AuthPage() {
       });
       if (result.error) throw result.error;
       if (result.redirected) return;
-      navigate({ to: "/" });
+      navigate("/");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro ao entrar com Google";
       toast.error(msg);
