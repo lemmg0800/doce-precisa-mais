@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+
 import { useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,13 +24,9 @@ import { Download, Upload, KeyRound, Calculator, Plus, Trash2, Pencil, Check, X,
 import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 
-export const Route = createFileRoute("/configuracoes")({
-  component: ConfigPage,
-});
-
-function ConfigPage() {
+export default function ConfigPage() {
   const { reason } = useSubscription();
   const { user } = useAuth();
   const isAssinante = reason === "ativo";

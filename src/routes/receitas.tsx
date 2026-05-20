@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,19 +20,15 @@ import { ReceitaFormDialog } from "@/components/ReceitaFormDialog";
 import type { Receita } from "@/store/types";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/receitas")({
-  head: () => ({
-    meta: [
-      { title: "Receitas — Preciflow" },
-      { name: "description", content: "Organize massas, recheios e caldas reutilizáveis em múltiplos produtos da sua produção." },
-      { property: "og:title", content: "Receitas — Preciflow" },
-      { property: "og:description", content: "Organize massas, recheios e caldas reutilizáveis em múltiplos produtos da sua produção." },
-    ],
-  }),
-  component: ReceitasPage,
-});
+import { usePageMeta } from "@/lib/usePageMeta";
 
-function ReceitasPage() {
+export default function ReceitasPage() {
+  usePageMeta({
+    title: "Receitas — Preciflow",
+    description: "Organize massas, recheios e caldas reutilizáveis em múltiplos produtos da sua produção.",
+    ogTitle: "Receitas — Preciflow",
+    ogDescription: "Organize massas, recheios e caldas reutilizáveis em múltiplos produtos da sua produção.",
+  });
   const receitas = usePricingStore((s) => s.receitas);
   const materias = usePricingStore((s) => s.materias);
   const produtos = usePricingStore((s) => s.produtos);

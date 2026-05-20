@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,19 +23,15 @@ import { MateriaFormDialog } from "@/components/MateriaFormDialog";
 import { MateriaImportDialog } from "@/components/MateriaImportDialog";
 import type { MateriaPrima } from "@/store/types";
 
-export const Route = createFileRoute("/materias-primas")({
-  head: () => ({
-    meta: [
-      { title: "Ingredientes — Preciflow" },
-      { name: "description", content: "Gerencie ingredientes e insumos, atualize preços e mantenha seus custos sempre precisos." },
-      { property: "og:title", content: "Ingredientes — Preciflow" },
-      { property: "og:description", content: "Gerencie ingredientes e insumos, atualize preços e mantenha seus custos sempre precisos." },
-    ],
-  }),
-  component: MateriasPage,
-});
+import { usePageMeta } from "@/lib/usePageMeta";
 
-function MateriasPage() {
+export default function MateriasPage() {
+  usePageMeta({
+    title: "Ingredientes — Preciflow",
+    description: "Gerencie ingredientes e insumos, atualize preços e mantenha seus custos sempre precisos.",
+    ogTitle: "Ingredientes — Preciflow",
+    ogDescription: "Gerencie ingredientes e insumos, atualize preços e mantenha seus custos sempre precisos.",
+  });
   const materias = usePricingStore((s) => s.materias);
   const deleteMateria = usePricingStore((s) => s.deleteMateria);
   const produtos = usePricingStore((s) => s.produtos);

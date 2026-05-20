@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,19 +16,15 @@ import { KitFormDialog } from "@/components/KitFormDialog";
 import type { KitEmbalagem } from "@/store/types";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/kits")({
-  head: () => ({
-    meta: [
-      { title: "Kits — Preciflow" },
-      { name: "description", content: "Monte combos e kits a partir dos seus produtos e calcule preço e lucro do conjunto." },
-      { property: "og:title", content: "Kits — Preciflow" },
-      { property: "og:description", content: "Monte combos e kits a partir dos seus produtos e calcule preço e lucro do conjunto." },
-    ],
-  }),
-  component: KitsPage,
-});
+import { usePageMeta } from "@/lib/usePageMeta";
 
-function KitsPage() {
+export default function KitsPage() {
+  usePageMeta({
+    title: "Kits — Preciflow",
+    description: "Monte combos e kits a partir dos seus produtos e calcule preço e lucro do conjunto.",
+    ogTitle: "Kits — Preciflow",
+    ogDescription: "Monte combos e kits a partir dos seus produtos e calcule preço e lucro do conjunto.",
+  });
   const kits = usePricingStore((s) => s.kits);
   const materias = usePricingStore((s) => s.materias);
   const produtos = usePricingStore((s) => s.produtos);
