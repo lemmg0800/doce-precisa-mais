@@ -463,6 +463,7 @@ export const usePricingStore = create<State>()((set, get) => ({
       if (e2) throw e2;
     }
     await get().loadAll();
+    return data.id as string;
   },
   updateReceita: async (id, r) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
