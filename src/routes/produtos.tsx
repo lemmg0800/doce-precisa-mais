@@ -63,6 +63,15 @@ export default function ProdutosPage() {
   const [editing, setEditing] = useState<Produto | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [expandedCats, setExpandedCats] = useState<string[]>(() => readStored(`${STORAGE_PREFIX}${user?.id ?? "anon"}`) ?? []);
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      const v = localStorage.getItem(`${VIEW_STORAGE_PREFIX}${user?.id ?? "anon"}`);
+      return v === "list" ? "list" : "grid";
+    } catch { return "grid"; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(`${VIEW_STORAGE_PREFIX}${user?.id ?? "anon"}`, viewMode); } catch {}
+  }, [viewMode, user?.id]);
 
   const grupos = useMemo(() => {
     const filtered = produtos
