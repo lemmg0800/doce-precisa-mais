@@ -172,6 +172,20 @@ export default function ProdutosPage() {
             <Button variant="outline" size="lg" onClick={() => setCatOpen(true)}>
               <Settings2 className="h-4 w-4 mr-2" /> Categorias
             </Button>
+            <ToggleGroup
+              type="single"
+              value={viewMode}
+              onValueChange={(v) => v && setViewMode(v as ViewMode)}
+              className="border rounded-md p-0.5"
+              aria-label="Modo de exibição"
+            >
+              <ToggleGroupItem value="grid" aria-label="Exibir em quadros" className="h-9 px-2.5 data-[state=on]:bg-secondary">
+                <LayoutGrid className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="list" aria-label="Exibir em lista" className="h-9 px-2.5 data-[state=on]:bg-secondary">
+                <List className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
             <Button
               size="lg"
               onClick={() => {
