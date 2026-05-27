@@ -1,0 +1,1 @@
+CREATE POLICY "msg_select_own" ON public.mensagens_contato FOR SELECT TO authenticated USING (auth.uid() = user_id);
