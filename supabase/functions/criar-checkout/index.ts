@@ -1,5 +1,6 @@
 // @ts-nocheck
 import Stripe from "https://esm.sh/stripe@17.5.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const PRICE_MAP: Record<string, string> = {
   mensal: "price_1TTi9kEk3Vivi26bcLKo23kT",
@@ -17,9 +18,35 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { user_id, email, plano } = await req.json();
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(token);
+    if (claimsErr || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const authedUserId = claimsData.claims.sub as string;
+    const authedEmail = claimsData.claims.email as string | undefined;
+
+    const { plano } = await req.json();
     const priceId = PRICE_MAP[plano];
-    if (!user_id || !email || !priceId) {
+    if (!priceId || !authedEmail) {
       return new Response(JSON.stringify({ error: "Parâmetros inválidos" }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -34,12 +61,12 @@ Deno.serve(async (req) => {
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
-      customer_email: email,
+      customer_email: authedEmail,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/sucesso`,
       cancel_url: `${origin}/cancelado`,
-      metadata: { user_id, plano },
-      subscription_data: { metadata: { user_id, plano } },
+      metadata: { user_id: authedUserId, plano },
+      subscription_data: { metadata: { user_id: authedUserId, plano } },
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
