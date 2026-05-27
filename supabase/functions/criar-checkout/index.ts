@@ -57,7 +57,14 @@ Deno.serve(async (req) => {
       apiVersion: "2024-11-20.acacia",
     });
 
-    const origin = req.headers.get("origin") || "";
+    const ALLOWED_ORIGINS = new Set([
+      "https://preciflow.lovable.app",
+      "https://id-preview--5d254dca-0024-4a02-a120-69066bc5955b.lovable.app",
+    ]);
+    const requestOrigin = req.headers.get("origin") || "";
+    const origin = ALLOWED_ORIGINS.has(requestOrigin)
+      ? requestOrigin
+      : "https://preciflow.lovable.app";
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -75,7 +82,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("criar-checkout error:", err);
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
+    return new Response(JSON.stringify({ error: "Erro interno. Tente novamente." }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
