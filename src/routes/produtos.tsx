@@ -243,6 +243,56 @@ export default function ProdutosPage() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
+                  {viewMode === "list" ? (
+                    <ul className="divide-y border rounded-lg overflow-hidden mt-2 bg-card">
+                      {itens.map(({ p, calc }) => (
+                        <li key={p.id} className="flex items-center gap-2 px-3 py-2.5 hover:bg-secondary/30">
+                          <div className="h-8 w-8 rounded-md bg-accent/30 grid place-items-center shrink-0">
+                            <ChefHat className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-sm truncate">{p.nome_produto}</div>
+                            <div className="text-[11px] text-muted-foreground tabular-nums">
+                              Custo {brl(calc.custo_unitario_produto)} · Sugerido <span className="text-success font-medium">{brl(calc.preco_sugerido)}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label="Editar produto"
+                              onClick={() => { setEditing(p); setOpen(true); }}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label="Duplicar produto"
+                              onClick={async () => {
+                                const newId = await duplicateProduto(p.id);
+                                toast.success("Produto duplicado.");
+                                if (newId) {
+                                  const novo = usePricingStore.getState().produtos.find((x) => x.id === newId);
+                                  if (novo) { setEditing(novo); setOpen(true); }
+                                }
+                              }}
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label="Excluir produto"
+                              onClick={() => setConfirmId(p.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pt-2">
                     {itens.map(({ p, calc }) => (
                       <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow">
@@ -369,6 +419,7 @@ export default function ProdutosPage() {
                       </Card>
                     ))}
                   </div>
+                  )}
                 </AccordionContent>
               </AccordionItem>
             ))}
