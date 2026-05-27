@@ -22,6 +22,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
 
 const STORAGE_PREFIX = "preciflow:produtos:categorias-abertas:";
+const VIEW_STORAGE_PREFIX = "preciflow:produtos:view-mode:";
+type ViewMode = "grid" | "list";
 const readStored = (key: string): string[] | null => {
   try {
     const raw = localStorage.getItem(key);
