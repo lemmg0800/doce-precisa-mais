@@ -11,7 +11,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Copy, Search, ChefHat, Settings2, BookOpen } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, Search, ChefHat, Settings2, BookOpen, LayoutGrid, List } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { usePricingStore, calcularProduto, custoUnitarioReceita, useConfigEfetiva } from "@/store/usePricingStore";
 import { brl, pct } from "@/lib/format";
 import { ProdutoFormDialog } from "@/components/ProdutoFormDialog";
@@ -21,6 +22,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
 
 const STORAGE_PREFIX = "preciflow:produtos:categorias-abertas:";
+const VIEW_STORAGE_PREFIX = "preciflow:produtos:view-mode:";
+type ViewMode = "grid" | "list";
 const readStored = (key: string): string[] | null => {
   try {
     const raw = localStorage.getItem(key);
@@ -60,6 +63,15 @@ export default function ProdutosPage() {
   const [editing, setEditing] = useState<Produto | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [expandedCats, setExpandedCats] = useState<string[]>(() => readStored(`${STORAGE_PREFIX}${user?.id ?? "anon"}`) ?? []);
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      const v = localStorage.getItem(`${VIEW_STORAGE_PREFIX}${user?.id ?? "anon"}`);
+      return v === "list" ? "list" : "grid";
+    } catch { return "grid"; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(`${VIEW_STORAGE_PREFIX}${user?.id ?? "anon"}`, viewMode); } catch {}
+  }, [viewMode, user?.id]);
 
   const grupos = useMemo(() => {
     const filtered = produtos
@@ -160,6 +172,20 @@ export default function ProdutosPage() {
             <Button variant="outline" size="lg" onClick={() => setCatOpen(true)}>
               <Settings2 className="h-4 w-4 mr-2" /> Categorias
             </Button>
+            <ToggleGroup
+              type="single"
+              value={viewMode}
+              onValueChange={(v) => v && setViewMode(v as ViewMode)}
+              className="border rounded-md p-0.5"
+              aria-label="Modo de exibição"
+            >
+              <ToggleGroupItem value="grid" aria-label="Exibir em quadros" className="h-9 px-2.5 data-[state=on]:bg-secondary">
+                <LayoutGrid className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="list" aria-label="Exibir em lista" className="h-9 px-2.5 data-[state=on]:bg-secondary">
+                <List className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
             <Button
               size="lg"
               onClick={() => {
@@ -217,6 +243,56 @@ export default function ProdutosPage() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
+                  {viewMode === "list" ? (
+                    <ul className="divide-y border rounded-lg overflow-hidden mt-2 bg-card">
+                      {itens.map(({ p, calc }) => (
+                        <li key={p.id} className="flex items-center gap-2 px-3 py-2.5 hover:bg-secondary/30">
+                          <div className="h-8 w-8 rounded-md bg-accent/30 grid place-items-center shrink-0">
+                            <ChefHat className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-sm truncate">{p.nome_produto}</div>
+                            <div className="text-[11px] text-muted-foreground tabular-nums">
+                              Custo {brl(calc.custo_unitario_produto)} · Sugerido <span className="text-success font-medium">{brl(calc.preco_sugerido)}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label="Editar produto"
+                              onClick={() => { setEditing(p); setOpen(true); }}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label="Duplicar produto"
+                              onClick={async () => {
+                                const newId = await duplicateProduto(p.id);
+                                toast.success("Produto duplicado.");
+                                if (newId) {
+                                  const novo = usePricingStore.getState().produtos.find((x) => x.id === newId);
+                                  if (novo) { setEditing(novo); setOpen(true); }
+                                }
+                              }}
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label="Excluir produto"
+                              onClick={() => setConfirmId(p.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pt-2">
                     {itens.map(({ p, calc }) => (
                       <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow">
@@ -343,6 +419,7 @@ export default function ProdutosPage() {
                       </Card>
                     ))}
                   </div>
+                  )}
                 </AccordionContent>
               </AccordionItem>
             ))}
