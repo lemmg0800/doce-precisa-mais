@@ -244,9 +244,9 @@ export default function ProdutosPage() {
                 </AccordionTrigger>
                 <AccordionContent>
                   {viewMode === "list" ? (
-                    <ul className="divide-y border rounded-lg overflow-hidden mt-2 bg-card">
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
                       {itens.map(({ p, calc }) => (
-                        <li key={p.id} className="flex items-center gap-2 px-3 py-2.5 hover:bg-secondary/30">
+                        <li key={p.id} className="flex items-center gap-2 px-3 py-2.5 border rounded-lg bg-card hover:bg-secondary/30">
                           <div className="h-8 w-8 rounded-md bg-accent/30 grid place-items-center shrink-0">
                             <ChefHat className="h-4 w-4 text-primary" />
                           </div>
